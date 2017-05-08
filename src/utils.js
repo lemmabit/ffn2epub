@@ -19,6 +19,17 @@ export function get(url, responseType) {
   });
 }
 
+export function makeSafeUint8Array(dumb) {
+  const data = dumb.wrappedJSObject || dumb;
+  
+  const length = dumb.length;
+  const out = new Uint8Array(length);
+  for(let i = 0; i < length; ++i) {
+    out[i] = data[i];
+  }
+  return out;
+}
+
 export function escapeForHTML(string) {
   const div = document.createElement('div');
   div.textContent = string;

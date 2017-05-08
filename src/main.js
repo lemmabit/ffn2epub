@@ -1,6 +1,6 @@
-import { get, escapeForHTML, areStringsEquivalent } from './utils.js';
-import { heartquotes } from './heartquotes.js';
+import { get, escapeForHTML } from './utils.js';
 import { parseFFHTML } from './parse-ff-html.js';
+import * as OCFWriter from './ocf-writer.js';
 
 window.addEventListener('click', ev => {
   const a = ev.target.closest('a[href^="/download_epub.php"]');
@@ -13,13 +13,12 @@ window.addEventListener('click', ev => {
   .then(html => {
     const doc = new DOMParser().parseFromString(html, 'text/html');
     const book = parseFFHTML(doc);
-    window.eval(`book = ${JSON.stringify(book, (key, value) => {
-      if(value.querySelector) {
-        return value.outerHTML;
-      } else {
-        return value;
-      }
-    })};`);
+    const ocfWriter = OCFWriter.create();
+    ocfWriter.addFile('stuff/cool/yeah.txt', "Howdy!");
+    ocfWriter.addFile('stuff/me.zip', ocfWriter.generate());
+    return ocfWriter.generate().then(blob => {
+      window.location = URL.createObjectURL(blob);
+    });
   })
   .catch(err => {
     unsafeWindow.ShowErrorWindow(`

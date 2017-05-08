@@ -1,3 +1,6 @@
+import { areStringsEquivalent } from './utils.js';
+import { heartquotes } from './heartquotes.js';
+
 // note that this function modifies `doc` in place.
 export function parseFFHTML(doc) {
   function isEmptyParagraph(el) {
