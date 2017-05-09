@@ -1,6 +1,5 @@
 import { get, escapeForHTML } from './utils.js';
-import { parseFFHTML } from './parse-ff-html.js';
-import * as OCFWriter from './ocf-writer.js';
+import * as Book from './book.js';
 
 window.addEventListener('click', ev => {
   const a = ev.target.closest('a[href^="/download_epub.php"]');
@@ -12,13 +11,11 @@ window.addEventListener('click', ev => {
   get(`/download_story.php?story=${storyID}&html`, 'text')
   .then(html => {
     const doc = new DOMParser().parseFromString(html, 'text/html');
-    const book = parseFFHTML(doc);
-    const ocfWriter = OCFWriter.create();
-    ocfWriter.addFile('stuff/cool/yeah.txt', "Howdy!");
-    ocfWriter.addFile('stuff/me.zip', ocfWriter.generate());
-    return ocfWriter.generate().then(blob => {
-      window.location = URL.createObjectURL(blob);
-    });
+    const book = Book.fromFFHTML(doc);
+    return Book.toEPUB(book);
+  })
+  .then(blob => {
+    window.location = URL.createObjectURL(blob);
   })
   .catch(err => {
     unsafeWindow.ShowErrorWindow(`

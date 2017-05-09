@@ -1,8 +1,9 @@
 import { areStringsEquivalent } from './utils.js';
 import { heartquotes } from './heartquotes.js';
+import * as OCFWriter from './ocf-writer.js';
 
 // note that this function modifies `doc` in place.
-export function parseFFHTML(doc) {
+export function fromFFHTML(doc) {
   function isEmptyParagraph(el) {
     return el.outerHTML.toLowerCase() === '<p></p>';
   }
@@ -93,4 +94,9 @@ export function parseFFHTML(doc) {
     authorURL,
     chapters,
   };
+}
+
+export function toEPUB(book) {
+  const ocfWriter = OCFWriter.create();
+  return ocfWriter.generate();
 }
