@@ -85,7 +85,7 @@ export function areStringsEquivalent(a, b) {
       .replace(/\b(?:twenty|twent[iy]e?th)\b/g, '20')
       .replace(/\b(?:thirty|thirt[iy]e?th)\b/g, '30')
       .replace(/\b(?:fou?rty|fort[iy]e?th)\b/g, '40')
-      .replace(/\b(?:fi[fv]e?ty|fift[iy]e?th)\b/g, '50')
+      .replace(/\b(?:fi[fv]e?ty|fi[fv]e?t[iy]e?th)\b/g, '50')
       .replace(/\b(?:sixty|sixt[iy]e?th)\b/g, '60')
       .replace(/\b(?:seventy|sevent[iy]e?th)\b/g, '70')
       .replace(/\b(?:eight?ty|eight?t[iy]e?th)\b/g, '80')
