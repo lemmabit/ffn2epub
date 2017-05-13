@@ -80,7 +80,8 @@ export function heartquotes(root) {
   }
   
   function element(el) {
-    var display = window.getComputedStyle(el).getPropertyValue('display');
+    //var display = window.getComputedStyle(el).getPropertyValue('display');
+    var display = 'inline';
     if(display === 'none') {
       return;
     } else if(display === 'block') {
