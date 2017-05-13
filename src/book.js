@@ -1,5 +1,5 @@
-import { areStringsEquivalent } from './utils.js';
-import { heartquotes } from './heartquotes.js';
+import { areStringsEquivalent, processTemplate, escapeForXML, makeSlug } from './utils.js';
+import { heartquotes, stringquotes } from './heartquotes.js';
 import * as OCFWriter from './ocf-writer.js';
 
 // note that this function modifies `doc` in place.
@@ -57,17 +57,17 @@ export function fromFFHTML(doc) {
     elements.forEach(heartquotes); // smartify quotes and ellipses.
     
     chapters.push({
-      chapterTitle,
+      title: chapterTitle,
       elements,
     });
   }
   
-  const existingTitleElements = chapters.map(({ chapterTitle, elements }) => {
+  const existingTitleElements = chapters.map(({ title, elements }) => {
     for(let i = 1; i < elements.length; ++i) {
       const el = elements[i];
       const textContent = el.textContent;
       if(/[^\W_]/.test(textContent)) {
-        if(areStringsEquivalent(textContent, chapterTitle)) {
+        if(areStringsEquivalent(textContent, title)) {
           return el;
         } else {
           return;
@@ -96,7 +96,53 @@ export function fromFFHTML(doc) {
   };
 }
 
+import resources_container_xml from './resources/container.xml';
+import resources_package_opf from './resources/package.opf';
+import resources_nav_xhtml from './resources/nav.xhtml';
+
 export function toEPUB(book) {
+  const now = new Date();
+  now.setUTCMilliseconds(0);
+  const nowString = now.toISOString().replace(/\.000Z$/, 'Z');
+  
+  const slugs = new Map();
+  const leadingZeroes = String(book.chapters.length).replace(/./g, '0');
+  book.chapters.forEach((chapter, index) => {
+    slugs.set(chapter, makeSlug(`${(leadingZeroes + (index + 1)).slice(-leadingZeroes.length)}-${chapter.title}`));
+  });
+  
   const ocfWriter = OCFWriter.create();
+  ocfWriter.addFile("META-INF/container.xml", resources_container_xml);
+  ocfWriter.addFile("package.opf", processTemplate(resources_package_opf, {
+    EPUB_VERSION:       escapeForXML('3.0'),
+    URI:                escapeForXML(book.url),
+    TITLE:              escapeForXML(book.title),
+    LAST_MODIFIED_DATE: escapeForXML(nowString),
+    AUTHOR:             escapeForXML(book.author),
+    CHAPTER_ITEMS:      book.chapters.map(ch => {
+      const slug = slugs.get(ch);
+      if(slug !== escapeForXML(slug)) {
+        throw Error("Slugs should always be XML-safe!");
+      }
+      return `<item id="ch${slug}" href="${slug}.xhtml" media-type="application/xhtml+xml" />`;
+    }),
+    CHAPTER_ITEMREFS:   book.chapters.map(ch => {
+      const slug = slugs.get(ch);
+      if(slug !== escapeForXML(slug)) {
+        throw Error("Slugs should always be XML-safe!");
+      }
+      return `<itemref idref="ch${slug}" />`;
+    }),
+  }));
+  ocfWriter.addFile("nav.xhtml", processTemplate(resources_nav_xhtml, {
+    STORY_TITLE:        escapeForXML(stringquotes(book.title)),
+    CHAPTER_LIS:        book.chapters.map(ch => {
+      const slug = slugs.get(ch);
+      if(slug !== escapeForXML(slug)) {
+        throw Error("Slugs should always be XML-safe!");
+      }
+      return `<li><a href="${slug}.xhtml">${escapeForXML(stringquotes(ch.title))}</a></li>`;
+    }),
+  }));
   return ocfWriter.generate();
 }

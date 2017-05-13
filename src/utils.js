@@ -36,6 +36,50 @@ export function escapeForHTML(string) {
   return div.innerHTML;
 }
 
+// the ordering is important because '&' appears in entity references.
+const xmlEntities = [
+  { reference: '&amp;',  regex: /&/g },
+  { reference: '&quot;', regex: /"/g },
+  { reference: '&apos;', regex: /'/g },
+  { reference: '&lt;',   regex: /</g },
+  { reference: '&gt;',   regex: />/g },
+];
+
+export function escapeForXML(string) {
+  for(let i = 0; i < xmlEntities.length; ++i) {
+    const { reference, regex } = xmlEntities[i];
+    string = string.replace(regex, reference);
+  }
+  return string;
+}
+
+export function processTemplate(template, replacements) {
+  for(let key in replacements) {
+    if(Object.prototype.hasOwnProperty.call(replacements, key)) {
+      const replacement = replacements[key];
+      // what a lovely bit of code, eh?
+      template = template.replace(
+        new RegExp(`\\{\\{\\s*${key.replace(/[\.\*\+\?\^\$\{\}\(\)\|\[\]\\]/g, '\\$&')}\\s*\\}\\}`, 'g'),
+        typeof replacement === 'string' ? replacement :
+        (match, offset, string) => replacement.join('\n' + Array(offset - string.lastIndexOf('\n', offset)).join(' ')),
+      );
+    }
+  }
+  return template;
+}
+
+export function makeSlug(str) {
+  return String(str)
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/\s/g, '-')
+    .replace(/[^\x20-\x7E]/g, '')
+    .replace(/\W/g, '-')
+    .replace(/\-+/g, '-')
+    .replace(/^\-+/, '')
+    .replace(/\-+$/, '');
+}
+
 export function areStringsEquivalent(a, b) {
   function normalize(str) {
     function numberer(original) {
@@ -90,6 +134,8 @@ export function areStringsEquivalent(a, b) {
       .replace(/\b(?:seventy|sevent[iy]e?th)\b/g, '70')
       .replace(/\b(?:eight?ty|eight?t[iy]e?th)\b/g, '80')
       .replace(/\b(?:nine?ty|nine?t[iy]e?th)\b/g, '90')
+
+      .normalize('NFD')
       
       .replace(/\W/g, '');
   }

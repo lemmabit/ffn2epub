@@ -1,23 +1,23 @@
 // https://gist.github.com/Permutatrix/6a251d5bc7b27cb238c17d4f7d4c41cf
 
+function transform(replace) {
+  // thanks to Kelly Martin for writing the brilliant code these were adapted from:
+  // http://smartquotesjs.com/
+  replace(/'''/g, '\u2034');                                                  // triple prime
+  replace(/(\W|^)"(?=\S)/g, '\u201c', true);                                  // beginning "
+  replace(/(\u201c[^"]*)"(?=[^"]*$|[^\u201c"]*\u201c)/g, '\u201d', true);     // ending "
+  replace(/([^0-9])"/g, '\u201d', true);                                      // remaining " at end of word
+  replace(/''/g, '\u2033');                                                   // double prime
+  replace(/(\W|^)'(?=\S)/g, '\u2018', true);                                  // beginning '
+  replace(/([a-z])'(?=[a-z])/ig, '\u2019', true);                             // conjunction's possession
+  replace(/((\u2018[^']*)|[a-z])'(?=[^0-9]|$)/ig, '\u2019', true);            // ending '
+  replace(/(\u2018)(?=([0-9]{2}[^\u2019]*)(\u2018([^0-9]|$)|$|\u2019[a-z]))/ig, '\u2019'); // abbrev. years like '93
+  replace(/(\B|^)\u2018(?=([^\u2019]*\u2019\b)*([^\u2019\u2018]*\W[\u2019\u2018]\b|[^\u2019\u2018]*$))/ig, '\u2019', true); // backwards apostrophe
+  replace(/'/g, '\u2032');
+  replace(/\.\.\./g, '\u2026');
+}
+
 export function heartquotes(root) {
-  function transform(replace) {
-    // thanks to Kelly Martin for writing the brilliant code these were adapted from:
-    // http://smartquotesjs.com/
-    replace(/'''/g, '\u2034');                                                  // triple prime
-    replace(/(\W|^)"(?=\S)/g, '\u201c', true);                                  // beginning "
-    replace(/(\u201c[^"]*)"(?=[^"]*$|[^\u201c"]*\u201c)/g, '\u201d', true);     // ending "
-    replace(/([^0-9])"/g, '\u201d', true);                                      // remaining " at end of word
-    replace(/''/g, '\u2033');                                                   // double prime
-    replace(/(\W|^)'(?=\S)/g, '\u2018', true);                                  // beginning '
-    replace(/([a-z])'(?=[a-z])/ig, '\u2019', true);                             // conjunction's possession
-    replace(/((\u2018[^']*)|[a-z])'(?=[^0-9]|$)/ig, '\u2019', true);            // ending '
-    replace(/(\u2018)(?=([0-9]{2}[^\u2019]*)(\u2018([^0-9]|$)|$|\u2019[a-z]))/ig, '\u2019'); // abbrev. years like '93
-    replace(/(\B|^)\u2018(?=([^\u2019]*\u2019\b)*([^\u2019\u2018]*\W[\u2019\u2018]\b|[^\u2019\u2018]*$))/ig, '\u2019', true); // backwards apostrophe
-    replace(/'/g, '\u2032');
-    replace(/\.\.\./g, '\u2026');
-  }
-  
   var TEXT_NODE = Element.TEXT_NODE, ELEMENT_NODE = Element.ELEMENT_NODE;
   
   var contents = '', nodes = [];
@@ -113,4 +113,12 @@ export function heartquotes(root) {
   
   element(root);
   flush();
+}
+
+export function stringquotes(str) {
+  function replace(regex, string, fakeLookbehind) {
+    str = str.replace(regex, fakeLookbehind ? '$1' + string : string);
+  }
+  transform(replace);
+  return str;
 }

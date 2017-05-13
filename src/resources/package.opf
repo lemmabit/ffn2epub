@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://www.idpf.org/2007/opf"
+         xmlns:dc="http://purl.org/dc/elements/1.1/"
+         prefix="dc: http://purl.org/dc/elements/1.1/"
+         version="{{ EPUB_VERSION }}" xml:lang="en" dir="ltr"
+         unique-identifier="uri-identifier">
+  <metadata>
+    <dc:identifier id="uri-identifier">{{ URI }}</dc:identifier>
+    <dc:title>{{ TITLE }}</dc:title>
+    <dc:language>en</dc:language>
+    <meta property="dcterms:modified">{{ LAST_MODIFIED_DATE }}</meta>
+    <dc:creator>{{ AUTHOR }}</dc:creator>
+    <dc:subject>My Little Pony: Friendship is Magic fanfiction</dc:subject>
+    <dc:publisher>Fimfiction</dc:publisher>
+    <meta property="dc:rights">This work heavily features characters, settings, and/or items from the "My Little Pony: Friendship is Magic" franchise, all of which are the intellectual property of Hasbro, Inc. Other intellectual property featured in the work, including the work itself, may or may not belong to either Hasbro or {{ AUTHOR }}.</meta>
+  </metadata>
+  <manifest>
+    <item id="nav" href="nav.xhtml" media-type="application/xhtml+xml" properties="nav" />
+    <!--<item id="cover-image" href="images/idpflogo_web_125.jpg" media-type="image/jpeg" properties="cover-image" />-->
+    <item id="css" href="style.css" media-type="text/css" />
+    {{ CHAPTER_ITEMS }}
+  </manifest>
+  <spine page-progression-direction="ltr">
+    {{ CHAPTER_ITEMREFS }}
+  </spine>
+</package>

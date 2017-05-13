@@ -17,7 +17,7 @@ gulp.task('default', function() {
         include: 'node_modules/**',
       }),
       string({
-        include: '**/*.css',
+        include: 'src/resources/**',
       }),
     ],
     format: 'es',
