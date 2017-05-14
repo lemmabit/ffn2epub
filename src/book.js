@@ -1,4 +1,4 @@
-import { areStringsEquivalent, processTemplate, escapeForXML, makeSlug } from './utils.js';
+import { get, areStringsEquivalent, processTemplate, escapeForXML, makeSlug, detectImageType } from './utils.js';
 import { heartquotes, stringquotes } from './heartquotes.js';
 import * as OCFWriter from './ocf-writer.js';
 
@@ -109,15 +109,43 @@ export function toEPUB(book) {
   now.setUTCMilliseconds(0);
   const nowString = now.toISOString().replace(/\.000Z$/, 'Z');
   
-  const slugs = new Map();
-  const leadingZeroes = String(book.chapters.length).replace(/./g, '0');
-  book.chapters.forEach((chapter, index) => {
-    slugs.set(chapter, makeSlug(`${(leadingZeroes + (index + 1)).slice(-leadingZeroes.length)}-${chapter.title}`));
-  });
-  
   const ocfWriter = OCFWriter.create();
   ocfWriter.addFile('META-INF/container.xml', resources_container_xml);
-  ocfWriter.addFile('package.opf', processTemplate(resources_package_opf, {
+  
+  const slugs = new Map();
+  const leadingZeroes = String(book.chapters.length).replace(/./g, '0');
+  const images = new Map();
+  const prereqPromises = new Map();
+  const allNecessaryPromises = [];
+  let imageCounter = 0;
+  book.chapters.forEach((chapter, index) => {
+    slugs.set(chapter, makeSlug(`${(leadingZeroes + (index + 1)).slice(-leadingZeroes.length)}-${chapter.title}`));
+    const promises = [];
+    chapter.elements.forEach(el => {
+      const imgs = el.getElementsByTagName('img');
+      for(let i = 0; i < imgs.length; ++i) {
+        const src = imgs[i].src;
+        if(!images.has(src)) {
+          const imageNumber = ++imageCounter;
+          const p = get(src, 'arraybuffer').then(buf => {
+            const leadingZeroes = String(imageCounter).replace(/./g, '0');
+            const { ext, mime } = detectImageType(buf);
+            const id = `img${(leadingZeroes + imageNumber).slice(-leadingZeroes.length)}`;
+            const name = `${id}.${ext}`;
+            ocfWriter.addFile(name, buf);
+            images.set(src, { id, name, mime });
+          });
+          images.set(src, p);
+          allNecessaryPromises.push(p);
+        }
+        promises.push(Promise.resolve(images.get(src)));
+      }
+    });
+    prereqPromises.set(chapter, Promise.all(promises));
+  });
+  const resourcesPromise = Promise.all(allNecessaryPromises);
+  
+  ocfWriter.addFile('package.opf', resourcesPromise.then(() => processTemplate(resources_package_opf, {
     EPUB_VERSION:       escapeForXML('3.0'),
     URI:                escapeForXML(book.url),
     TITLE:              escapeForXML(book.title),
@@ -130,6 +158,9 @@ export function toEPUB(book) {
       }
       return `<item id="ch${slug}" href="${slug}.xhtml" media-type="application/xhtml+xml" />`;
     }),
+    IMAGE_ITEMS:        Array.from(images.values()).map(({ id, name, mime }) => {
+      return `<item id="${id}" href="${name}" media-type="${mime}" />`;
+    }),
     CHAPTER_ITEMREFS:   book.chapters.map(ch => {
       const slug = slugs.get(ch);
       if(slug !== escapeForXML(slug)) {
@@ -137,7 +168,7 @@ export function toEPUB(book) {
       }
       return `<itemref idref="ch${slug}" />`;
     }),
-  }));
+  })));
   ocfWriter.addFile('nav.xhtml', processTemplate(resources_nav_xhtml, {
     STORY_TITLE:        escapeForXML(stringquotes(book.title)),
     CHAPTER_LIS:        book.chapters.map(ch => {
@@ -151,7 +182,8 @@ export function toEPUB(book) {
   ocfWriter.addFile('style.css', resources_style_css);
   book.chapters.forEach(chapter => {
     const slug = slugs.get(chapter);
-    ocfWriter.addFile(`${slug}.xhtml`, processTemplate(resources_chapter_xhtml, {
+    const prereq = prereqPromises.get(chapter);
+    ocfWriter.addFile(`${slug}.xhtml`, prereq.then(() => processTemplate(resources_chapter_xhtml, {
       STORY_TITLE:        escapeForXML(stringquotes(book.title)),
       CHAPTER_TITLE:      escapeForXML(stringquotes(chapter.title)),
       ELEMENTS:           chapter.elements.map(el => {
@@ -178,6 +210,10 @@ export function toEPUB(book) {
             out += ` class="${escapeForXML(classNames)}"`;
           }
           Array.prototype.forEach.call(el.attributes, ({ name, value }) => {
+            name = name.toLowerCase();
+            if(tagName === 'img' && name === 'src') {
+              value = images.get(el.src).name;
+            }
             if(name !== 'class') {
               out += ` ${name}="${escapeForXML(value)}"`;
             }
@@ -205,7 +241,7 @@ export function toEPUB(book) {
         
         return render(el);
       }),
-    }));
+    })));
   });
-  return ocfWriter.generate();
+  return resourcesPromise.then(() => ocfWriter.generate());
 }

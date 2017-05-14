@@ -80,6 +80,52 @@ export function makeSlug(str) {
     .replace(/\-+$/, '');
 }
 
+export function detectImageType(input) {
+  const buf = new Uint8Array(input);
+  
+  if(!buf || buf.length <= 1) {
+    return;
+  }
+  
+  function check(header) {
+    for(let i = 0; i < header.length; ++i) {
+      if(header[i] !== buf[i]) {
+        return false;
+      }
+    }
+    
+    return true;
+  }
+  
+  if(check([0xFF, 0xD8, 0xFF])) {
+    return {
+      ext: 'jpg',
+      mime: 'image/jpeg',
+    };
+  }
+  
+  if(check([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A])) {
+    return {
+      ext: 'png',
+      mime: 'image/png',
+    };
+  }
+  
+  if(check([0x47, 0x49, 0x46])) {
+    return {
+      ext: 'gif',
+      mime: 'image/gif',
+    };
+  }
+  
+  if(/<\s*svg\W/i.test(new TextDecoder().decode(input))) {
+    return {
+      ext: 'svg',
+      mime: 'image/svg+xml',
+    };
+  }
+}
+
 export function areStringsEquivalent(a, b) {
   function normalize(str) {
     function numberer(original) {

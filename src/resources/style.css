@@ -10,7 +10,6 @@ p.indented {
   text-indent: 3em;
 }
 
-p.double::before {
-  content: '\0A';
-  white-space: pre;
+p.double {
+  margin-top: 1.15em;
 }
