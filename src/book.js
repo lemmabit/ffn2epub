@@ -99,6 +99,10 @@ export function fromFFHTML(doc) {
 import resources_container_xml from './resources/container.xml';
 import resources_package_opf from './resources/package.opf';
 import resources_nav_xhtml from './resources/nav.xhtml';
+import resources_chapter_xhtml from './resources/chapter.xhtml';
+import resources_style_css from './resources/style.css';
+
+const reVoidTag = /^(?:area|base|br|col|embed|hr|img|input|keygen|link|meta|param|source|track|wbr)$/i;
 
 export function toEPUB(book) {
   const now = new Date();
@@ -112,8 +116,8 @@ export function toEPUB(book) {
   });
   
   const ocfWriter = OCFWriter.create();
-  ocfWriter.addFile("META-INF/container.xml", resources_container_xml);
-  ocfWriter.addFile("package.opf", processTemplate(resources_package_opf, {
+  ocfWriter.addFile('META-INF/container.xml', resources_container_xml);
+  ocfWriter.addFile('package.opf', processTemplate(resources_package_opf, {
     EPUB_VERSION:       escapeForXML('3.0'),
     URI:                escapeForXML(book.url),
     TITLE:              escapeForXML(book.title),
@@ -134,7 +138,7 @@ export function toEPUB(book) {
       return `<itemref idref="ch${slug}" />`;
     }),
   }));
-  ocfWriter.addFile("nav.xhtml", processTemplate(resources_nav_xhtml, {
+  ocfWriter.addFile('nav.xhtml', processTemplate(resources_nav_xhtml, {
     STORY_TITLE:        escapeForXML(stringquotes(book.title)),
     CHAPTER_LIS:        book.chapters.map(ch => {
       const slug = slugs.get(ch);
@@ -144,5 +148,64 @@ export function toEPUB(book) {
       return `<li><a href="${slug}.xhtml">${escapeForXML(stringquotes(ch.title))}</a></li>`;
     }),
   }));
+  ocfWriter.addFile('style.css', resources_style_css);
+  book.chapters.forEach(chapter => {
+    const slug = slugs.get(chapter);
+    ocfWriter.addFile(`${slug}.xhtml`, processTemplate(resources_chapter_xhtml, {
+      STORY_TITLE:        escapeForXML(stringquotes(book.title)),
+      CHAPTER_TITLE:      escapeForXML(stringquotes(chapter.title)),
+      ELEMENTS:           chapter.elements.map(el => {
+        var TEXT_NODE = Element.TEXT_NODE, ELEMENT_NODE = Element.ELEMENT_NODE;
+        
+        function render(el) {
+          let out = '';
+          
+          let tagName = el.tagName.toLowerCase();
+          let classNames = el.getAttribute('class') || '';
+          if(tagName === 'center') {
+            tagName = 'p';
+            classNames = 'center ' + classNames;
+          }
+          classNames = classNames.trim();
+          
+          if(tagName === 'iframe') {
+            return '';
+          }
+          
+          out += '<';
+          out += tagName;
+          if(classNames) {
+            out += ` class="${escapeForXML(classNames)}"`;
+          }
+          Array.prototype.forEach.call(el.attributes, ({ name, value }) => {
+            if(name !== 'class') {
+              out += ` ${name}="${escapeForXML(value)}"`;
+            }
+          });
+          if(reVoidTag.test(tagName)) {
+            out += ' />';
+            return out;
+          }
+          out += '>';
+          
+          const children = el.childNodes;
+          for(let i = 0; i < children.length; ++i) {
+            var child = children[i];
+            if(child.nodeType === TEXT_NODE) {
+              out += escapeForXML(child.nodeValue);
+            } else if(child.nodeType === ELEMENT_NODE) {
+              out += render(child);
+            }
+          }
+          
+          out += `</${tagName}>`;
+          
+          return out;
+        }
+        
+        return render(el);
+      }),
+    }));
+  });
   return ocfWriter.generate();
 }
