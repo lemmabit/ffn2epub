@@ -46,6 +46,7 @@ const xmlEntities = [
 ];
 
 export function escapeForXML(string) {
+  string = String(string);
   for(let i = 0; i < xmlEntities.length; ++i) {
     const { reference, regex } = xmlEntities[i];
     string = string.replace(regex, reference);

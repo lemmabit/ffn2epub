@@ -152,10 +152,16 @@ export function toEPUB(book) {
     const { ext, mime } = detectImageType(buf);
     const name = `cover-image.${ext}`;
     ocfWriter.addFile(name, buf);
-    const out = { id: 'cover-image', name, mime };
+    const out = { id: 'cover-image', name, mime, buf };
     images.set({}, out);
     return out;
   }) : Promise.resolve();
+  const coverImageElementPromise = book.coverImageURL && coverImagePromise.then(({ id, name, mime, buf }) => new Promise((resolve, reject) => {
+    const img = document.createElement('img');
+    img.onerror = img.onabort = reject;
+    img.onload = () => resolve({ id, name, mime, buf, img });
+    img.src = URL.createObjectURL(new Blob([buf], { type: mime }));
+  }));
   allNecessaryPromises.push(coverImagePromise);
   const resourcesPromise = Promise.all(allNecessaryPromises);
   
@@ -165,6 +171,7 @@ export function toEPUB(book) {
     TITLE:              escapeForXML(book.title),
     LAST_MODIFIED_DATE: escapeForXML(nowString),
     AUTHOR:             escapeForXML(book.author),
+    COVER_IMAGE_META:   book.coverImageURL ? '<meta name="cover" content="cover-image" />' : '',
     CHAPTER_ITEMS:      (book.coverImageURL ? ['<item id="cover-image-page" href="cover-image.xhtml" media-type="application/xhtml+xml" />'] : []).concat(book.chapters.map(ch => {
       const slug = slugs.get(ch);
       if(slug !== escapeForXML(slug)) {
@@ -173,9 +180,9 @@ export function toEPUB(book) {
       return `<item id="ch${slug}" href="${slug}.xhtml" media-type="application/xhtml+xml" />`;
     })),
     IMAGE_ITEMS:        Array.from(images.values()).map(({ id, name, mime }) => {
-      return `<item id="${id}" href="${name}" media-type="${mime}"${id === 'cover-image' ? ' properties="cover-image"' : ''} />`;
+      return `<item id="${escapeForXML(id)}" href="${escapeForXML(name)}" media-type="${escapeForXML(mime)}"${id === 'cover-image' ? ' properties="cover-image"' : ''} />`;
     }),
-    CHAPTER_ITEMREFS:   (book.coverImageURL ? ['<itemref idref="cover-image-page" linear="no" />'] : []).concat(book.chapters.map(ch => {
+    CHAPTER_ITEMREFS:   (book.coverImageURL ? ['<itemref idref="cover-image-page" linear="no" properties="svg" />'] : []).concat(book.chapters.map(ch => {
       const slug = slugs.get(ch);
       if(slug !== escapeForXML(slug)) {
         throw Error("Slugs should always be XML-safe!");
@@ -195,8 +202,10 @@ export function toEPUB(book) {
   }));
   ocfWriter.addFile('style.css', resources_style_css);
   if(book.coverImageURL) {
-    ocfWriter.addFile('cover-image.xhtml', coverImagePromise.then(({ name }) => processTemplate(resources_cover_image_xhtml, {
-      COVER_IMAGE: name,
+    ocfWriter.addFile('cover-image.xhtml', coverImageElementPromise.then(({ name, img }) => processTemplate(resources_cover_image_xhtml, {
+      IMAGE_WIDTH: escapeForXML(img.naturalWidth),
+      IMAGE_HEIGHT: escapeForXML(img.naturalHeight),
+      IMAGE_NAME: escapeForXML(name),
     })));
   }
   book.chapters.forEach(chapter => {
