@@ -1,4 +1,4 @@
-import { get, areStringsEquivalent, processTemplate, escapeForXML, makeSlug, detectImageType } from './utils.js';
+import { get, areStringsEquivalent, processTemplate, escapeForXML, makeSlug, detectImageType, renderDateString } from './utils.js';
 import { heartquotes, stringquotes } from './heartquotes.js';
 import * as OCFWriter from './ocf-writer.js';
 
@@ -93,6 +93,20 @@ export function fromFFHTML({ story: doc, storyPage }) {
   const descriptionMeta = storyPage.querySelector('meta[property="og:description"]');
   const description = descriptionMeta.getAttribute('content');
   
+  const datePublishedSpan = document.querySelector('.date_approved .published ~ span');
+  const datePublishedParts = /(\d+)[a-z]* ([a-z]+) (\d+)/i.exec(datePublishedSpan.textContent);
+  const datePublished = new Date();
+  datePublished.setUTCMilliseconds(0);
+  datePublished.setUTCSeconds(0);
+  datePublished.setUTCMinutes(0);
+  datePublished.setUTCHours(0);
+  datePublished.setUTCDate(datePublishedParts[1] |0);
+  datePublished.setUTCMonth({
+    jan: 0, feb: 1, mar: 2, apr: 3, may: 4, jun: 5,
+    jul: 6, aug: 7, sep: 8, oct: 9, nov: 10, dec: 11,
+  }[datePublishedParts[2].slice(0, 3).toLowerCase()] |0);
+  datePublished.setUTCFullYear(datePublishedParts[3] |0);
+  
   return {
     title,
     url,
@@ -100,6 +114,7 @@ export function fromFFHTML({ story: doc, storyPage }) {
     authorURL,
     coverImageURL,
     description,
+    datePublished,
     chapters,
   };
 }
@@ -116,7 +131,6 @@ const reVoidTag = /^(?:area|base|br|col|embed|hr|img|input|keygen|link|meta|para
 export function toEPUB(book) {
   const now = new Date();
   now.setUTCMilliseconds(0);
-  const nowString = now.toISOString().replace(/\.000Z$/, 'Z');
   
   const ocfWriter = OCFWriter.create();
   ocfWriter.addFile('META-INF/container.xml', resources_container_xml);
@@ -173,9 +187,10 @@ export function toEPUB(book) {
     EPUB_VERSION:       escapeForXML('3.0'),
     URI:                escapeForXML(book.url),
     TITLE:              escapeForXML(book.title),
-    LAST_MODIFIED_DATE: escapeForXML(nowString),
+    LAST_MODIFIED_DATE: escapeForXML(renderDateString(now)),
     AUTHOR:             escapeForXML(book.author),
     DESCRIPTION:        escapeForXML(book.description),
+    PUBLISHED_DATE:     escapeForXML(renderDateString(book.datePublished)),
     COVER_IMAGE_META:   book.coverImageURL ? '<meta name="cover" content="cover-image" />' : '',
     CHAPTER_ITEMS:      (book.coverImageURL ? ['<item id="cover-image-page" href="cover-image.xhtml" media-type="application/xhtml+xml" />'] : []).concat(book.chapters.map(ch => {
       const slug = slugs.get(ch);

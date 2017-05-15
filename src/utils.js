@@ -127,6 +127,10 @@ export function detectImageType(input) {
   }
 }
 
+export function renderDateString(date) {
+  return date.toISOString().replace(/\.000Z$/, 'Z');
+}
+
 export function areStringsEquivalent(a, b) {
   function normalize(str) {
     function numberer(original) {
