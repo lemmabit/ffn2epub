@@ -7,11 +7,12 @@ window.addEventListener('click', ev => {
   const match = /[\?&]story=([^&]*)/.exec(a.href);
   if(!match) return;
   const storyID = decodeURIComponent(match[1]);
+  const storyPage = a.closest('.story_content_box');
   
   get(`/download_story.php?story=${storyID}&html`, 'text')
   .then(html => {
     const doc = new DOMParser().parseFromString(html, 'text/html');
-    const book = Book.fromFFHTML(doc);
+    const book = Book.fromFFHTML({ story: doc, storyPage });
     return Book.toEPUB(book);
   })
   .then(blob => {

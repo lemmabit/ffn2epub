@@ -3,7 +3,7 @@ import { heartquotes, stringquotes } from './heartquotes.js';
 import * as OCFWriter from './ocf-writer.js';
 
 // note that this function modifies `doc` in place.
-export function fromFFHTML(doc) {
+export function fromFFHTML({ story: doc, storyPage }) {
   function isEmptyParagraph(el) {
     return el.outerHTML.toLowerCase() === '<p></p>';
   }
@@ -87,11 +87,15 @@ export function fromFFHTML(doc) {
   // this will lead to redundancy in some cases, but that's better than
   // inconsistency.
   
+  const coverImageA = storyPage.querySelector('.story_image a');
+  const coverImageURL = coverImageA && coverImageA.href;
+  
   return {
     title,
     url,
     author,
     authorURL,
+    coverImageURL,
     chapters,
   };
 }
@@ -100,6 +104,7 @@ import resources_container_xml from './resources/container.xml';
 import resources_package_opf from './resources/package.opf';
 import resources_nav_xhtml from './resources/nav.xhtml';
 import resources_chapter_xhtml from './resources/chapter.xhtml';
+import resources_cover_image_xhtml from './resources/cover-image.xhtml';
 import resources_style_css from './resources/style.css';
 
 const reVoidTag = /^(?:area|base|br|col|embed|hr|img|input|keygen|link|meta|param|source|track|wbr)$/i;
@@ -143,6 +148,15 @@ export function toEPUB(book) {
     });
     prereqPromises.set(chapter, Promise.all(promises));
   });
+  const coverImagePromise = book.coverImageURL ? get(book.coverImageURL, 'arraybuffer').then(buf => {
+    const { ext, mime } = detectImageType(buf);
+    const name = `cover-image.${ext}`;
+    ocfWriter.addFile(name, buf);
+    const out = { id: 'cover-image', name, mime };
+    images.set({}, out);
+    return out;
+  }) : Promise.resolve();
+  allNecessaryPromises.push(coverImagePromise);
   const resourcesPromise = Promise.all(allNecessaryPromises);
   
   ocfWriter.addFile('package.opf', resourcesPromise.then(() => processTemplate(resources_package_opf, {
@@ -151,23 +165,23 @@ export function toEPUB(book) {
     TITLE:              escapeForXML(book.title),
     LAST_MODIFIED_DATE: escapeForXML(nowString),
     AUTHOR:             escapeForXML(book.author),
-    CHAPTER_ITEMS:      book.chapters.map(ch => {
+    CHAPTER_ITEMS:      (book.coverImageURL ? ['<item id="cover-image-page" href="cover-image.xhtml" media-type="application/xhtml+xml" />'] : []).concat(book.chapters.map(ch => {
       const slug = slugs.get(ch);
       if(slug !== escapeForXML(slug)) {
         throw Error("Slugs should always be XML-safe!");
       }
       return `<item id="ch${slug}" href="${slug}.xhtml" media-type="application/xhtml+xml" />`;
-    }),
+    })),
     IMAGE_ITEMS:        Array.from(images.values()).map(({ id, name, mime }) => {
-      return `<item id="${id}" href="${name}" media-type="${mime}" />`;
+      return `<item id="${id}" href="${name}" media-type="${mime}"${id === 'cover-image' ? ' properties="cover-image"' : ''} />`;
     }),
-    CHAPTER_ITEMREFS:   book.chapters.map(ch => {
+    CHAPTER_ITEMREFS:   (book.coverImageURL ? ['<itemref idref="cover-image-page" linear="no" />'] : []).concat(book.chapters.map(ch => {
       const slug = slugs.get(ch);
       if(slug !== escapeForXML(slug)) {
         throw Error("Slugs should always be XML-safe!");
       }
-      return `<itemref idref="ch${slug}" />`;
-    }),
+      return `<itemref idref="ch${slug}" linear="yes" />`;
+    })),
   })));
   ocfWriter.addFile('nav.xhtml', processTemplate(resources_nav_xhtml, {
     STORY_TITLE:        escapeForXML(stringquotes(book.title)),
@@ -180,6 +194,11 @@ export function toEPUB(book) {
     }),
   }));
   ocfWriter.addFile('style.css', resources_style_css);
+  if(book.coverImageURL) {
+    ocfWriter.addFile('cover-image.xhtml', coverImagePromise.then(({ name }) => processTemplate(resources_cover_image_xhtml, {
+      COVER_IMAGE: name,
+    })));
+  }
   book.chapters.forEach(chapter => {
     const slug = slugs.get(chapter);
     const prereq = prereqPromises.get(chapter);
