@@ -137,8 +137,6 @@ import resources_chapter_xhtml from './resources/chapter.xhtml';
 import resources_cover_image_xhtml from './resources/cover-image.xhtml';
 import resources_style_css from './resources/style.css';
 
-const reVoidTag = /^(?:area|base|br|col|embed|hr|img|input|keygen|link|meta|param|source|track|wbr)$/i;
-
 export function toEPUB(book) {
   const now = new Date();
   now.setUTCMilliseconds(0);
@@ -259,62 +257,66 @@ export function toEPUB(book) {
     ocfWriter.addFile(`${slug}.xhtml`, prereq.then(() => processTemplate(resources_chapter_xhtml, {
       STORY_TITLE:        escapeForXML(stringquotes(book.title)),
       CHAPTER_TITLE:      escapeForXML(stringquotes(chapter.title)),
-      ELEMENTS:           chapter.elements.map(el => {
-        var TEXT_NODE = Element.TEXT_NODE, ELEMENT_NODE = Element.ELEMENT_NODE;
-        
-        function render(el) {
-          let out = '';
-          
-          let tagName = el.tagName.toLowerCase();
-          let classNames = el.getAttribute('class') || '';
-          if(tagName === 'center') {
-            tagName = 'p';
-            classNames = 'center ' + classNames;
-          }
-          classNames = classNames.trim();
-          
-          if(tagName === 'iframe') {
-            return '';
-          }
-          
-          out += '<';
-          out += tagName;
-          if(classNames) {
-            out += ` class="${escapeForXML(classNames)}"`;
-          }
-          Array.prototype.forEach.call(el.attributes, ({ name, value }) => {
-            name = name.toLowerCase();
-            if(tagName === 'img' && name === 'src') {
-              value = images.get(el.src).name;
-            }
-            if(name !== 'class') {
-              out += ` ${name}="${escapeForXML(value)}"`;
-            }
-          });
-          if(reVoidTag.test(tagName)) {
-            out += ' />';
-            return out;
-          }
-          out += '>';
-          
-          const children = el.childNodes;
-          for(let i = 0; i < children.length; ++i) {
-            var child = children[i];
-            if(child.nodeType === TEXT_NODE) {
-              out += escapeForXML(child.nodeValue);
-            } else if(child.nodeType === ELEMENT_NODE) {
-              out += render(child);
-            }
-          }
-          
-          out += `</${tagName}>`;
-          
-          return out;
-        }
-        
-        return render(el);
-      }),
+      ELEMENTS:           chapter.elements.map(el => renderAsXHTML(el, images)),
     })));
   });
   return resourcesPromise.then(() => ocfWriter.generate());
+}
+
+const reVoidTag = /^(?:area|base|br|col|embed|hr|img|input|keygen|link|meta|param|source|track|wbr)$/i;
+
+function renderAsXHTML(el, images) {
+  var TEXT_NODE = Element.TEXT_NODE, ELEMENT_NODE = Element.ELEMENT_NODE;
+  
+  function render(el) {
+    let out = '';
+    
+    let tagName = el.tagName.toLowerCase();
+    let classNames = el.getAttribute('class') || '';
+    if(tagName === 'center') {
+      tagName = 'p';
+      classNames = 'center ' + classNames;
+    }
+    classNames = classNames.trim();
+    
+    if(tagName === 'iframe') {
+      return '';
+    }
+    
+    out += '<';
+    out += tagName;
+    if(classNames) {
+      out += ` class="${escapeForXML(classNames)}"`;
+    }
+    Array.prototype.forEach.call(el.attributes, ({ name, value }) => {
+      name = name.toLowerCase();
+      if(tagName === 'img' && name === 'src') {
+        value = images.get(el.src).name;
+      }
+      if(name !== 'class') {
+        out += ` ${name}="${escapeForXML(value)}"`;
+      }
+    });
+    if(reVoidTag.test(tagName)) {
+      out += ' />';
+      return out;
+    }
+    out += '>';
+    
+    const children = el.childNodes;
+    for(let i = 0; i < children.length; ++i) {
+      var child = children[i];
+      if(child.nodeType === TEXT_NODE) {
+        out += escapeForXML(child.nodeValue);
+      } else if(child.nodeType === ELEMENT_NODE) {
+        out += render(child);
+      }
+    }
+    
+    out += `</${tagName}>`;
+    
+    return out;
+  }
+  
+  return render(el);
 }
