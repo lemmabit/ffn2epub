@@ -107,6 +107,15 @@ export function fromFFHTML({ story: doc, storyPage }) {
   }[datePublishedParts[2].slice(0, 3).toLowerCase()] |0);
   datePublished.setUTCFullYear(datePublishedParts[3] |0);
   
+  const contentRatingA = storyPage.querySelector('.story_content_box [class*="content-rating-"]');
+  const contentRating = {
+    'content-rating-everyone': 'Everyone',
+    'content-rating-teen':     'Teen',
+    'content-rating-mature':   'Mature',
+  }[contentRatingA.getAttribute('class')];
+  
+  const categories = [...storyPage.querySelectorAll('.story_content_box .story_category')].map(a => a.textContent.trim());
+  
   return {
     title,
     url,
@@ -115,6 +124,8 @@ export function fromFFHTML({ story: doc, storyPage }) {
     coverImageURL,
     description,
     datePublished,
+    contentRating,
+    categories,
     chapters,
   };
 }
@@ -189,6 +200,20 @@ export function toEPUB(book) {
     TITLE:              escapeForXML(book.title),
     LAST_MODIFIED_DATE: escapeForXML(renderDateString(now)),
     AUTHOR:             escapeForXML(book.author),
+    CATEGORY_SUBJECTS:  [`Rated "${book.contentRating}"`].concat(book.categories).map(cat => {
+      let machineForm = cat.toLowerCase();
+      machineForm = {
+        'rated "everyone"': 'everyone',
+        'rated "teen"': 'teen',
+        'rated "mature"': 'mature',
+        '2nd person': '2nd',
+        'alternate universe': 'au',
+        'equestria girls': 'eqg',
+        'sci-fi': 'scifi',
+        'slice of life': 'sol',
+      }[machineForm] || machineForm;
+      return `<dc:subject opf:authority="https://www.fimfiction.net/tag-information" opf:term="${escapeForXML(machineForm)}">${escapeForXML(cat)}</dc:subject>`;
+    }),
     DESCRIPTION:        escapeForXML(book.description),
     PUBLISHED_DATE:     escapeForXML(renderDateString(book.datePublished)),
     COVER_IMAGE_META:   book.coverImageURL ? '<meta name="cover" content="cover-image" />' : '',

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <package xmlns="http://www.idpf.org/2007/opf"
+         xmlns:opf="http://www.idpf.org/2007/opf"
          xmlns:dc="http://purl.org/dc/elements/1.1/"
          prefix="dc: http://purl.org/dc/elements/1.1/"
          version="{{ EPUB_VERSION }}" xml:lang="en" dir="ltr"
@@ -11,6 +12,7 @@
     <meta property="dcterms:modified">{{ LAST_MODIFIED_DATE }}</meta>
     <dc:creator>{{ AUTHOR }}</dc:creator>
     <dc:subject>My Little Pony: Friendship is Magic fanfiction</dc:subject>
+    {{ CATEGORY_SUBJECTS }}
     <dc:publisher>Fimfiction</dc:publisher>
     <dc:description>{{ DESCRIPTION }}</dc:description>
     <dc:date>{{ PUBLISHED_DATE }}</dc:date>
