@@ -1,5 +1,4 @@
 * Scrape data that isn't available in Fimfiction's rendered HTML.
-  * Date of publication [`<dc:date>`](http://www.idpf.org/epub/31/spec/epub-packages.html#sec-opf-dcdate)
   * Tags, including content rating, categories, and possibly character tags [`<dc:subject>`](http://www.idpf.org/epub/31/spec/epub-packages.html#sec-opf-dcsubject)
     * Link to <https://www.fimfiction.net/tag-information> as `opf:authority`?
   * Long description
