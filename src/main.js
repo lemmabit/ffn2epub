@@ -7,12 +7,16 @@ window.addEventListener('click', ev => {
   const match = /[\?&]story=([^&]*)/.exec(a.href);
   if(!match) return;
   const storyID = decodeURIComponent(match[1]);
-  const storyPage = a.closest('.story_content_box');
+  const storyContentBox = a.closest('.story_content_box');
   
-  get(`/download_story.php?story=${storyID}&html`, 'text')
-  .then(html => {
-    const doc = new DOMParser().parseFromString(html, 'text/html');
-    const book = Book.fromFFHTML({ story: doc, storyPage });
+  Promise.all([
+    get(`/download_story.php?story=${storyID}&html`, 'text'),
+    get(storyContentBox.querySelector('a.story_name').href, 'text'),
+  ])
+  .then(([storyHTML, storyPageHTML]) => {
+    const story = new DOMParser().parseFromString(storyHTML, 'text/html');
+    const storyPage = new DOMParser().parseFromString(storyPageHTML, 'text/html');
+    const book = Book.fromFFHTML({ story, storyPage });
     return Book.toEPUB(book);
   })
   .then(blob => {

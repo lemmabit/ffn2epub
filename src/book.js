@@ -90,12 +90,16 @@ export function fromFFHTML({ story: doc, storyPage }) {
   const coverImageA = storyPage.querySelector('.story_image a');
   const coverImageURL = coverImageA && coverImageA.href;
   
+  const descriptionMeta = storyPage.querySelector('meta[property="og:description"]');
+  const description = descriptionMeta.getAttribute('content');
+  
   return {
     title,
     url,
     author,
     authorURL,
     coverImageURL,
+    description,
     chapters,
   };
 }
@@ -171,6 +175,7 @@ export function toEPUB(book) {
     TITLE:              escapeForXML(book.title),
     LAST_MODIFIED_DATE: escapeForXML(nowString),
     AUTHOR:             escapeForXML(book.author),
+    DESCRIPTION:        escapeForXML(book.description),
     COVER_IMAGE_META:   book.coverImageURL ? '<meta name="cover" content="cover-image" />' : '',
     CHAPTER_ITEMS:      (book.coverImageURL ? ['<item id="cover-image-page" href="cover-image.xhtml" media-type="application/xhtml+xml" />'] : []).concat(book.chapters.map(ch => {
       const slug = slugs.get(ch);
