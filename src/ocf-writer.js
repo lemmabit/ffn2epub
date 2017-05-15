@@ -119,19 +119,15 @@ export function create() {
       }
     }));
     
-    const localRecords = Array(filePromises.length);
-    const realizedFiles = Array(filePromises.length);
-    
-    return Promise.all(filePromises.map((file, fileIndex) => file.then(realizedFile => {
+    return Promise.all(filePromises.map(file => file.then(realizedFile => {
       let { name, compression, type, contents } = realizedFile;
-      realizedFiles[fileIndex] = realizedFile;
       const uncompressedSize = realizedFile.uncompressedSize = contents.byteLength;
       const crc32 = realizedFile.crc32 = calculateCRC32(contents);
       if(compression === 'deflate') {
         contents = realizedFile.contents = Pako.deflateRaw(contents, { level: 9 });
       }
       const nameBytes = realizedFile.nameBytes = new TextEncoder().encode(name);
-      localRecords[fileIndex] = [
+      const localRecord = [
         littleEndian32(0x04034b50), // local file header signature
         littleEndian16(compression === 'deflate' ? 20 : 10), // version needed to extract
         littleEndian16(0), // "general purpose bit flag", whatever that is!! loool XDXD
@@ -146,12 +142,14 @@ export function create() {
         nameBytes,
         contents,
       ];
+      return { realizedFile, localRecord };
     })))
-    .then(() => {
-      const data = Array.prototype.concat.apply([], localRecords);
+    .then(realizedFiles => {
+      const data = Array.prototype.concat.apply([], realizedFiles.map(x => x.localRecord));
       let byteIndex = 0, cdLength = 0;
       for(let fileIndex = 0; fileIndex < filePromises.length; ++fileIndex) {
-        const { name, compression, type, contents, uncompressedSize, crc32, nameBytes } = realizedFiles[fileIndex];
+        const { realizedFile, localRecord } = realizedFiles[fileIndex];
+        const { name, compression, type, contents, uncompressedSize, crc32, nameBytes } = realizedFile;
         data.push(
           littleEndian32(0x02014b50), // central file header signature
           littleEndian16(0x20), // version made by
@@ -171,8 +169,8 @@ export function create() {
           nameBytes,
         );
         cdLength += 46 + nameBytes.byteLength;
-        for(let i = 0, lr = localRecords[fileIndex]; i < lr.length; ++i) {
-          byteIndex += lr[i].byteLength;
+        for(let i = 0; i < localRecord.length; ++i) {
+          byteIndex += localRecord[i].byteLength;
         }
       }
       data.push(
