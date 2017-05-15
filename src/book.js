@@ -192,7 +192,7 @@ export function toEPUB(book) {
     DESCRIPTION:        escapeForXML(book.description),
     PUBLISHED_DATE:     escapeForXML(renderDateString(book.datePublished)),
     COVER_IMAGE_META:   book.coverImageURL ? '<meta name="cover" content="cover-image" />' : '',
-    CHAPTER_ITEMS:      (book.coverImageURL ? ['<item id="cover-image-page" href="cover-image.xhtml" media-type="application/xhtml+xml" />'] : []).concat(book.chapters.map(ch => {
+    CHAPTER_ITEMS:      (book.coverImageURL ? ['<item id="cover-image-page" href="cover-image.xhtml" media-type="application/xhtml+xml" properties="svg" />'] : []).concat(book.chapters.map(ch => {
       const slug = slugs.get(ch);
       if(slug !== escapeForXML(slug)) {
         throw Error("Slugs should always be XML-safe!");
@@ -202,7 +202,7 @@ export function toEPUB(book) {
     IMAGE_ITEMS:        Array.from(images.values()).map(({ id, name, mime }) => {
       return `<item id="${escapeForXML(id)}" href="${escapeForXML(name)}" media-type="${escapeForXML(mime)}"${id === 'cover-image' ? ' properties="cover-image"' : ''} />`;
     }),
-    CHAPTER_ITEMREFS:   (book.coverImageURL ? ['<itemref idref="cover-image-page" linear="no" properties="svg" />'] : []).concat(book.chapters.map(ch => {
+    CHAPTER_ITEMREFS:   (book.coverImageURL ? ['<itemref idref="cover-image-page" linear="no" />'] : []).concat(book.chapters.map(ch => {
       const slug = slugs.get(ch);
       if(slug !== escapeForXML(slug)) {
         throw Error("Slugs should always be XML-safe!");
