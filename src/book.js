@@ -10,11 +10,11 @@ export function fromFFHTML({ story: doc, storyPage }) {
   
   const titleA = doc.querySelector('h1 a');
   const title = titleA.textContent.trim();
-  const url = titleA.href;
+  const url = titleA.href.replace(/^http:/, 'https:');
   
   const authorA = doc.querySelector('h2 a');
   const author = authorA.textContent.trim();
-  const authorURL = authorA.href;
+  const authorURL = authorA.href.replace(/^http:/, 'https:');
   
   const allNamedAnchors = [...doc.querySelectorAll('a[name]')];
   const chapterAs = [...doc.querySelector('ul').getElementsByTagName('a')];

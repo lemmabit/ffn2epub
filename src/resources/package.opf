@@ -14,8 +14,10 @@
     <dc:subject>My Little Pony: Friendship is Magic fanfiction</dc:subject>
     {{ CATEGORY_SUBJECTS }}
     <dc:publisher>Fimfiction</dc:publisher>
+    <dc:relation>https://www.fimfiction.net</dc:relation>
     <dc:description>{{ DESCRIPTION }}</dc:description>
     <dc:date>{{ PUBLISHED_DATE }}</dc:date>
+    <dc:source>{{ URI }}</dc:source>
     <meta property="dc:rights">This work heavily features characters, settings, and/or items from the "My Little Pony: Friendship is Magic" franchise, all of which are the intellectual property of Hasbro, Inc. Other intellectual property featured in the work, including the work itself, may or may not belong to either Hasbro or {{ AUTHOR }}.</meta>
     {{ COVER_IMAGE_META }}
   </metadata>
