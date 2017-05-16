@@ -160,9 +160,8 @@ export function toEPUB(book) {
         if(!images.has(src)) {
           const imageNumber = ++imageCounter;
           const p = get(src, 'arraybuffer').then(buf => {
-            const leadingZeroes = String(imageCounter).replace(/./g, '0');
             const { ext, mime } = detectImageType(buf);
-            const id = `img${(leadingZeroes + imageNumber).slice(-leadingZeroes.length)}`;
+            const id = `img${(imagesLeadingZeroes + imageNumber).slice(-imagesLeadingZeroes.length)}`;
             const name = `${id}.${ext}`;
             ocfWriter.addFile(name, buf);
             images.set(src, { id, name, mime });
@@ -175,6 +174,7 @@ export function toEPUB(book) {
     });
     prereqPromises.set(chapter, Promise.all(promises));
   });
+  const imagesLeadingZeroes = String(imageCounter).replace(/./g, '0');
   const coverImagePromise = book.coverImageURL ? get(book.coverImageURL, 'arraybuffer').then(buf => {
     const { ext, mime } = detectImageType(buf);
     const name = `cover-image.${ext}`;
