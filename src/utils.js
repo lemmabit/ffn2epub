@@ -134,6 +134,15 @@ export function detectImageType(input) {
   }
 }
 
+export function createImageElement(src) {
+  return new Promise((resolve, reject) => {
+    const img = document.createElement('img');
+    img.onerror = img.onabort = reject;
+    img.onload = () => resolve(img);
+    img.src = src;
+  });
+}
+
 export function renderDateString(date) {
   return date.toISOString().replace(/\.000Z$/, 'Z');
 }

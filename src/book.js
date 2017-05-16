@@ -1,4 +1,4 @@
-import { get, areStringsEquivalent, processTemplate, escapeForXML, makeSlug, detectImageType, renderDateString } from './utils.js';
+import { get, areStringsEquivalent, processTemplate, escapeForXML, makeSlug, detectImageType, renderDateString, createImageElement } from './utils.js';
 import { heartquotes, stringquotes } from './heartquotes.js';
 import * as OCFWriter from './ocf-writer.js';
 
@@ -192,12 +192,10 @@ export function toEPUB(book) {
     images.set({}, out);
     return out;
   }) : Promise.resolve();
-  const coverImageElementPromise = book.coverImageURL && coverImagePromise.then(({ id, name, mime, buf }) => new Promise((resolve, reject) => {
-    const img = document.createElement('img');
-    img.onerror = img.onabort = reject;
-    img.onload = () => resolve({ id, name, mime, buf, img });
-    img.src = URL.createObjectURL(new Blob([buf], { type: mime }));
-  }));
+  const coverImageElementPromise = book.coverImageURL && coverImagePromise.then(({ id, name, mime, buf }) => {
+    const src = URL.createObjectURL(new Blob([buf], { type: mime }));
+    return createImageElement(src).then(img => ({ id, name, mime, buf, img }));
+  });
   allNecessaryPromises.push(coverImagePromise);
   const resourcesPromise = Promise.all(allNecessaryPromises);
   
