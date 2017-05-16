@@ -116,6 +116,13 @@ export function fromFFHTML({ story: doc, storyPage }) {
   
   const categories = [...storyPage.querySelectorAll('.story_content_box .story_category')].map(a => a.textContent.trim());
   
+  const characterTags = [...storyPage.querySelectorAll('.story_content_box a.character_icon')].map(a => {
+    return {
+      human: a.title,
+      machine: /\/([^\/]+)$/.exec(a.href)[1],
+    };
+  });
+  
   return {
     title,
     url,
@@ -126,6 +133,7 @@ export function fromFFHTML({ story: doc, storyPage }) {
     datePublished,
     contentRating,
     categories,
+    characterTags,
     chapters,
   };
 }
@@ -211,6 +219,11 @@ export function toEPUB(book) {
         'slice of life': 'sol',
       }[machineForm] || machineForm;
       return `<dc:subject opf:authority="https://www.fimfiction.net/tag-information" opf:term="${escapeForXML(machineForm)}">${escapeForXML(cat)}</dc:subject>`;
+    }),
+    CHARACTER_SUBJECTS: book.characterTags.map(({ human, machine }) => {
+      // <https://www.fimfiction.net/tags> is a poor choice, but there's no
+      // list of every character tag outside of the "edit story" interface.
+      return `<dc:subject opf:authority="https://www.fimfiction.net/tags" opf:term="${escapeForXML(machine)}">${escapeForXML(human)}</dc:subject>`;
     }),
     DESCRIPTION:        escapeForXML(book.description),
     PUBLISHED_DATE:     escapeForXML(renderDateString(book.datePublished)),

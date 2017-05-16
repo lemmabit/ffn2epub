@@ -13,6 +13,7 @@
     <dc:creator>{{ AUTHOR }}</dc:creator>
     <dc:subject>My Little Pony: Friendship is Magic fanfiction</dc:subject>
     {{ CATEGORY_SUBJECTS }}
+    {{ CHARACTER_SUBJECTS }}
     <dc:publisher>Fimfiction</dc:publisher>
     <dc:relation>https://www.fimfiction.net</dc:relation>
     <dc:description>{{ DESCRIPTION }}</dc:description>
