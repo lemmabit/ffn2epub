@@ -138,10 +138,29 @@ export function detectImageType(input) {
 
 export function createImageElement(src) {
   return new Promise((resolve, reject) => {
+    let isBlob = false;
+    if(src instanceof Blob) {
+      isBlob = true;
+      src = URL.createObjectURL(src);
+    }
+    function finish() {
+      if(isBlob) {
+        URL.revokeObjectURL(src);
+      }
+    }
     const img = document.createElement('img');
-    img.onerror = () => reject(`Error loading <img src="${src}" />`);
-    img.onabort = () => reject(`<img src="${src}" />'s loading was aborted`);
-    img.onload = () => resolve(img);
+    img.onerror = () => {
+      finish();
+      reject(`Error loading <img src="${src}" />`);
+    };
+    img.onabort = () => {
+      finish();
+      reject(`<img src="${src}" />'s loading was aborted`);
+    };
+    img.onload = () => {
+      finish();
+      resolve(img);
+    };
     img.src = src;
   });
 }
@@ -152,8 +171,7 @@ export function getImage(src) {
     if(imageType) {
       return { data: buf, imageType, img: undefined };
     } else {
-      const blobSrc = URL.createObjectURL(new Blob([buf]));
-      return createImageElement(blobSrc).then(img => new Promise((resolve, reject) => {
+      return createImageElement(new Blob([buf])).then(img => new Promise((resolve, reject) => {
         const canvas = document.createElement('canvas');
         canvas.width = img.naturalWidth;
         canvas.height = img.naturalHeight;

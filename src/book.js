@@ -194,8 +194,7 @@ export function toEPUB(book) {
       return { id, name, mime, img };
     } else {
       const blob = data instanceof Blob ? data : new Blob([data], { type: mime });
-      const src = URL.createObjectURL(blob);
-      return createImageElement(src).then(img => ({ id, name, mime, img }));
+      return createImageElement(blob).then(img => ({ id, name, mime, img }));
     }
   });
   allNecessaryPromises.push(coverImagePromise);

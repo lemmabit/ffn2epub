@@ -17,10 +17,21 @@ window.addEventListener('click', ev => {
     const story = new DOMParser().parseFromString(storyHTML, 'text/html');
     const storyPage = new DOMParser().parseFromString(storyPageHTML, 'text/html');
     const book = Book.fromFFHTML({ story, storyPage });
-    return Book.toEPUB(book);
+    return Book.toEPUB(book).then(blob => ({
+      filename: `${book.title} - ${book.author}.epub`,
+      blob,
+    }));
   })
-  .then(blob => {
-    window.location = URL.createObjectURL(blob);
+  .then(({ filename, blob }) => {
+    const a = document.createElement('a');
+    a.style.display = 'none';
+    const url = URL.createObjectURL(blob);
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 100);
   })
   .catch(err => {
     unsafeWindow.ShowErrorWindow(`
