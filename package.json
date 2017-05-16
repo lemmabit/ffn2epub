@@ -1,0 +1,30 @@
+{
+  "name": "ffn2epub",
+  "version": "0.0.0",
+  "description": "EPUB generator for Fimfiction.net stories",
+  "main": "fimfiction-to-epub.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Permutatrix/ffn2epub.git"
+  },
+  "author": "Permutator <permutatorem@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Permutatrix/ffn2epub/issues"
+  },
+  "homepage": "https://github.com/Permutatrix/ffn2epub#readme",
+  "private": true,
+  "devDependencies": {
+    "gulp": "^3.9.1",
+    "gulp-header": "^1.8.8",
+    "pako": "^1.0.5",
+    "rollup-plugin-commonjs": "^8.0.2",
+    "rollup-plugin-node-resolve": "^3.0.0",
+    "rollup-plugin-string": "^2.0.2",
+    "rollup-stream": "^1.19.0",
+    "vinyl-source-stream": "^1.1.0"
+  }
+}
