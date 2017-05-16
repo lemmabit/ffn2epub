@@ -145,13 +145,13 @@ export function toEPUB(book) {
   ocfWriter.addFile('META-INF/container.xml', resources_container_xml);
   
   const slugs = new Map();
-  const leadingZeroes = String(book.chapters.length).replace(/./g, '0');
+  const chaptersLeadingZeroes = String(book.chapters.length).replace(/./g, '0');
   const images = new Map();
   const prereqPromises = new Map();
   const allNecessaryPromises = [];
   let imageCounter = 0;
   book.chapters.forEach((chapter, index) => {
-    slugs.set(chapter, makeSlug(`${(leadingZeroes + (index + 1)).slice(-leadingZeroes.length)}-${chapter.title}`));
+    slugs.set(chapter, makeSlug(`${(chaptersLeadingZeroes + (index + 1)).slice(-chaptersLeadingZeroes.length)}-${chapter.title}`));
     const promises = [];
     chapter.elements.forEach(el => {
       const imgs = el.getElementsByTagName('img');
