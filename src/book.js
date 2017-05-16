@@ -1,4 +1,4 @@
-import { get, areStringsEquivalent, processTemplate, escapeForXML, makeSlug, detectImageType, renderDateString, createImageElement } from './utils.js';
+import { areStringsEquivalent, processTemplate, escapeForXML, makeSlug, renderDateString, createImageElement, getImage } from './utils.js';
 import { heartquotes, stringquotes } from './heartquotes.js';
 import * as OCFWriter from './ocf-writer.js';
 
@@ -168,11 +168,10 @@ export function toEPUB(book) {
         const src = imgs[i].src;
         if(!images.has(src)) {
           const imageNumber = ++imageCounter;
-          const p = get(src, 'arraybuffer').then(buf => {
-            const { ext, mime } = detectImageType(buf);
+          const p = getImage(src).then(({ data, imageType: { ext, mime } }) => {
             const id = `img${(imagesLeadingZeroes + imageNumber).slice(-imagesLeadingZeroes.length)}`;
             const name = `${id}.${ext}`;
-            ocfWriter.addFile(name, buf);
+            ocfWriter.addFile(name, data);
             images.set(src, { id, name, mime });
           });
           images.set(src, p);
@@ -184,17 +183,20 @@ export function toEPUB(book) {
     prereqPromises.set(chapter, Promise.all(promises));
   });
   const imagesLeadingZeroes = String(imageCounter).replace(/./g, '0');
-  const coverImagePromise = book.coverImageURL ? get(book.coverImageURL, 'arraybuffer').then(buf => {
-    const { ext, mime } = detectImageType(buf);
+  const coverImagePromise = book.coverImageURL ? getImage(book.coverImageURL).then(({ data, imageType: { ext, mime }, img }) => {
     const name = `cover-image.${ext}`;
-    ocfWriter.addFile(name, buf);
-    const out = { id: 'cover-image', name, mime, buf };
-    images.set({}, out);
-    return out;
+    ocfWriter.addFile(name, data);
+    images.set({}, { id: 'cover-image', name, mime });
+    return { id: 'cover-image', name, mime, data, img };
   }) : Promise.resolve();
-  const coverImageElementPromise = book.coverImageURL && coverImagePromise.then(({ id, name, mime, buf }) => {
-    const src = URL.createObjectURL(new Blob([buf], { type: mime }));
-    return createImageElement(src).then(img => ({ id, name, mime, buf, img }));
+  const coverImageElementPromise = book.coverImageURL && coverImagePromise.then(({ id, name, mime, data, img }) => {
+    if(img) {
+      return { id, name, mime, img };
+    } else {
+      const blob = data instanceof Blob ? data : new Blob([data], { type: mime });
+      const src = URL.createObjectURL(blob);
+      return createImageElement(src).then(img => ({ id, name, mime, img }));
+    }
   });
   allNecessaryPromises.push(coverImagePromise);
   const resourcesPromise = Promise.all(allNecessaryPromises);

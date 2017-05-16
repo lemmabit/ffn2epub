@@ -11,7 +11,9 @@ export function get(url, responseType) {
           reject(new Error(`Got HTTP response code ${status} for URL ${url}`));
         }
       },
-      onerror: reject,
+      onerror() {
+        reject(new Error(`Request for ${url} errored`));
+      },
       onabort() {
         reject(new Error(`Request for ${url} was aborted`));
       },
@@ -137,9 +139,35 @@ export function detectImageType(input) {
 export function createImageElement(src) {
   return new Promise((resolve, reject) => {
     const img = document.createElement('img');
-    img.onerror = img.onabort = reject;
+    img.onerror = () => reject(`Error loading <img src="${src}" />`);
+    img.onabort = () => reject(`<img src="${src}" />'s loading was aborted`);
     img.onload = () => resolve(img);
     img.src = src;
+  });
+}
+
+export function getImage(src) {
+  return get(src, 'arraybuffer').then(buf => {
+    const imageType = detectImageType(buf);
+    if(imageType) {
+      return { data: buf, imageType, img: undefined };
+    } else {
+      const blobSrc = URL.createObjectURL(new Blob([buf]));
+      return createImageElement(blobSrc).then(img => new Promise((resolve, reject) => {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, img.naturalWidth, img.naturalHeight);
+        const imageType = {
+          ext: 'png',
+          mime: 'image/png',
+        };
+        const blob = canvas.toBlob(blob => {
+          resolve({ data: blob, imageType, img });
+        }, imageType.mime);
+      }));
+    }
   });
 }
 
