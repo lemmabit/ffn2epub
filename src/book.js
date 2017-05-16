@@ -141,6 +141,7 @@ export function fromFFHTML({ story: doc, storyPage }) {
 import resources_container_xml from './resources/container.xml';
 import resources_package_opf from './resources/package.opf';
 import resources_nav_xhtml from './resources/nav.xhtml';
+import resources_nav_ncx from './resources/nav.ncx';
 import resources_chapter_xhtml from './resources/chapter.xhtml';
 import resources_cover_image_xhtml from './resources/cover-image.xhtml';
 import resources_style_css from './resources/style.css';
@@ -254,6 +255,23 @@ export function toEPUB(book) {
         throw Error("Slugs should always be XML-safe!");
       }
       return `<li><a href="${slug}.xhtml">${escapeForXML(stringquotes(ch.title))}</a></li>`;
+    }),
+  }));
+  ocfWriter.addFile('nav.ncx', processTemplate(resources_nav_ncx, {
+    URI:                escapeForXML(book.url),
+    TITLE:              escapeForXML(book.title),
+    AUTHOR:             escapeForXML(book.author),
+    CHAPTER_NAV_POINTS: book.chapters.map((ch, index) => {
+      const slug = slugs.get(ch);
+      if(slug !== escapeForXML(slug)) {
+        throw Error("Slugs should always be XML-safe!");
+      }
+      return [
+        `<navPoint id="ch${slug}" playOrder="${index + 1}">`,
+        `  <navLabel><text>${escapeForXML(ch.title)}</text></navLabel>`,
+        `  <content src="${slug}.xhtml" />`,
+        `</navPoint>`,
+      ];
     }),
   }));
   ocfWriter.addFile('style.css', resources_style_css);

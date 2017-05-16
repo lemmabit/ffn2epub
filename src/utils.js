@@ -55,14 +55,21 @@ export function escapeForXML(string) {
 }
 
 export function processTemplate(template, replacements) {
+  function flatten(arrayOrString, join) {
+    if(typeof arrayOrString === 'string') {
+      return arrayOrString;
+    } else {
+      return arrayOrString.map(x => flatten(x, join)).join(join);
+    }
+  }
+  
   for(let key in replacements) {
     if(Object.prototype.hasOwnProperty.call(replacements, key)) {
       const replacement = replacements[key];
       // what a lovely bit of code, eh?
       template = template.replace(
         new RegExp(`\\{\\{\\s*${key.replace(/[\.\*\+\?\^\$\{\}\(\)\|\[\]\\]/g, '\\$&')}\\s*\\}\\}`, 'g'),
-        typeof replacement === 'string' ? replacement :
-        (match, offset, string) => replacement.join('\n' + Array(offset - string.lastIndexOf('\n', offset)).join(' ')),
+        (match, offset, string) => flatten(replacement, '\n' + Array(offset - string.lastIndexOf('\n', offset)).join(' ')),
       );
     }
   }

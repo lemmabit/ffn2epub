@@ -24,11 +24,12 @@
   </metadata>
   <manifest>
     <item id="nav" href="nav.xhtml" media-type="application/xhtml+xml" properties="nav" />
+    <item id="ncx" href="nav.ncx" media-type="application/x-dtbncx+xml" />
     <item id="css" href="style.css" media-type="text/css" />
     {{ CHAPTER_ITEMS }}
     {{ IMAGE_ITEMS }}
   </manifest>
-  <spine page-progression-direction="ltr">
+  <spine page-progression-direction="ltr" toc="ncx">
     {{ CHAPTER_ITEMREFS }}
   </spine>
 </package>
