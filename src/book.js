@@ -119,7 +119,7 @@ export function fromFFHTML({ story: doc, storyPage }) {
   const characterTags = [...storyPage.querySelectorAll('.story_content_box a.character_icon')].map(a => {
     return {
       human: a.title,
-      machine: /\/([^\/]+)$/.exec(a.href)[1],
+      machine: /\/([^\/]+)$/.exec(a.getAttribute('href'))[1],
     };
   });
   
