@@ -108,11 +108,11 @@ export function fromFFHTML({ story: doc, storyPage }) {
   datePublished.setUTCFullYear(datePublishedParts[3] |0);
   
   const contentRatingA = storyPage.querySelector('.story_content_box [class*="content-rating-"]');
-  const contentRating = {
-    'content-rating-everyone': 'Everyone',
-    'content-rating-teen':     'Teen',
-    'content-rating-mature':   'Mature',
-  }[contentRatingA.getAttribute('class')];
+  const { contentRating } = [
+    { className: 'content-rating-everyone', contentRating: 'Everyone' },
+    { className: 'content-rating-teen',     contentRating: 'Teen' },
+    { className: 'content-rating-mature',   contentRating: 'Mature' },
+  ].find(({ className }) => contentRatingA.classList.contains(className));
   
   const categories = [...storyPage.querySelectorAll('.story_content_box .story_category')].map(a => a.textContent.trim());
   
