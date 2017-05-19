@@ -8,14 +8,14 @@ export function get(url, responseType) {
         if(status === 200) {
           resolve(response);
         } else {
-          reject(new Error(`Got HTTP response code ${status} for URL ${url}`));
+          reject(Error(`Got HTTP response code ${status} for URL ${url}`));
         }
       },
       onerror() {
-        reject(new Error(`Request for ${url} errored`));
+        reject(Error(`Request for ${url} errored`));
       },
       onabort() {
-        reject(new Error(`Request for ${url} was aborted`));
+        reject(Error(`Request for ${url} was aborted`));
       },
     });
   });
@@ -151,11 +151,11 @@ export function createImageElement(src) {
     const img = document.createElement('img');
     img.onerror = () => {
       finish();
-      reject(`Error loading <img src="${src}" />`);
+      reject(Error(`Error loading <img src="${src}" />`));
     };
     img.onabort = () => {
       finish();
-      reject(`<img src="${src}" />'s loading was aborted`);
+      reject(Error(`<img src="${src}" />'s loading was aborted`));
     };
     img.onload = () => {
       finish();

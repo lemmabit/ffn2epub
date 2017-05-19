@@ -95,8 +95,8 @@ export function create() {
               contents: makeSafeUint8Array(new Uint8Array(event.target.result)),
             });
           };
-          fileReader.onerror = () => reject("Error reading file!");
-          fileReader.onabort = () => reject("File reading was aborted!");
+          fileReader.onerror = () => reject(Error("Error reading file!"));
+          fileReader.onabort = () => reject(Error("File reading was aborted!"));
           fileReader.readAsArrayBuffer(contents);
         });
       } else {
