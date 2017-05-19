@@ -2,6 +2,8 @@ import { get, escapeForHTML } from './utils.js';
 import * as Book from './book.js';
 
 window.addEventListener('click', ev => {
+  const includeAuthorsNotes = true;
+  
   const a = ev.target.closest('a[href^="/download_epub.php"]');
   if(!a) return;
   const match = /[\?&]story=([^&]*)/.exec(a.href);
@@ -10,13 +12,20 @@ window.addEventListener('click', ev => {
   const storyContentBox = a.closest('.story_content_box');
   
   Promise.all([
-    get(`/download_story.php?story=${storyID}&html`, 'text'),
-    get(storyContentBox.querySelector('a.story_name').href, 'text'),
+    get(storyContentBox.querySelector('a.story_name').href, 'document').then(storyPage => {
+      if(includeAuthorsNotes) {
+        return Promise.all(
+          [...storyPage.querySelectorAll('.story_content_box a.chapter_link')]
+          .map(a => get(a.href, 'document'))
+        ).then(chapterPages => ({ storyPage, chapterPages }));
+      } else {
+        return { storyPage, chapterPages: undefined };
+      }
+    }),
+    get(`/download_story.php?story=${storyID}&html`, 'document'),
   ])
-  .then(([storyHTML, storyPageHTML]) => {
-    const story = new DOMParser().parseFromString(storyHTML, 'text/html');
-    const storyPage = new DOMParser().parseFromString(storyPageHTML, 'text/html');
-    const book = Book.fromFFHTML({ story, storyPage });
+  .then(([{ storyPage, chapterPages }, story]) => {
+    const book = Book.fromFFHTML({ story, storyPage, chapterPages, includeAuthorsNotes });
     return Book.toEPUB(book).then(blob => ({
       filename: `${book.title} - ${book.author}.epub`,
       blob,

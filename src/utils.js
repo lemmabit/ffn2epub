@@ -1,4 +1,9 @@
 export function get(url, responseType) {
+  let isDocument = false;
+  if(responseType === 'document') {
+    isDocument = true;
+    responseType = 'text';
+  }
   return new Promise((resolve, reject) => {
     GM_xmlhttpRequest({
       method: "GET",
@@ -6,7 +11,11 @@ export function get(url, responseType) {
       responseType,
       onload({ status, response }) {
         if(status === 200) {
-          resolve(response);
+          if(!isDocument) {
+            resolve(response);
+          } else {
+            resolve(new DOMParser().parseFromString(response, 'text/html'));
+          }
         } else {
           reject(Error(`Got HTTP response code ${status} for URL ${url}`));
         }

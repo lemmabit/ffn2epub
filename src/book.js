@@ -3,7 +3,7 @@ import { heartquotes, stringquotes } from './heartquotes.js';
 import * as OCFWriter from './ocf-writer.js';
 
 // note that this function modifies `doc` in place.
-export function fromFFHTML({ story: doc, storyPage }) {
+export function fromFFHTML({ story: doc, storyPage, chapterPages, includeAuthorsNotes }) {
   function isEmptyParagraph(el) {
     return el.outerHTML.toLowerCase() === '<p></p>';
   }
@@ -52,6 +52,29 @@ export function fromFFHTML({ story: doc, storyPage }) {
     }
     while(isEmptyParagraph(elements[elements.length - 1])) {
       elements.pop(); // cut off any trailing <p></p>.
+    }
+    
+    if(includeAuthorsNotes) {
+      const chapterPage = chapterPages[i];
+      const chapterContainer = chapterPage.getElementById('chapter_container');
+      
+      let notes, notesPosition = 'none';
+      if((notes = chapterContainer.nextElementSibling) && notes.matches('.authors-note')) {
+        notesPosition = 'bottom';
+      } else if((notes = chapterContainer.previousElementSibling) && notes.matches('.authors-note')) {
+        notesPosition = 'top';
+      }
+      
+      if(notesPosition !== 'none') {
+        notes = notes.cloneNode(true);
+        notes.removeAttribute('style');
+      }
+      
+      if(notesPosition === 'bottom') {
+        elements.push(notes);
+      } else if(notesPosition === 'top') {
+        elements.unshift(notes);
+      }
     }
     
     elements.forEach(heartquotes); // smartify quotes and ellipses.
