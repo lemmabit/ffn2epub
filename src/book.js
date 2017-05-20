@@ -195,7 +195,7 @@ import resources_chapter_xhtml from './resources/chapter.xhtml';
 import resources_cover_image_xhtml from './resources/cover-image.xhtml';
 import resources_style_css from './resources/style.css';
 
-export function toEPUB(book) {
+export function toEPUB(book, { epubVersion }) {
   const now = new Date();
   now.setUTCMilliseconds(0);
   
@@ -255,7 +255,7 @@ export function toEPUB(book) {
   const resourcesPromise = Promise.all(allNecessaryPromises);
   
   ocfWriter.addFile('package.opf', resourcesPromise.then(() => processTemplate(resources_package_opf, {
-    EPUB_VERSION:       escapeForXML('3.0'),
+    EPUB_VERSION:       escapeForXML(epubVersion),
     URI:                escapeForXML(book.url),
     TITLE:              escapeForXML(book.title),
     LAST_MODIFIED_DATE: escapeForXML(renderDateString(now)),
