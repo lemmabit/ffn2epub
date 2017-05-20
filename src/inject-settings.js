@@ -2,7 +2,7 @@ import * as Settings from './settings.js';
 
 import resources_settings_html from './resources/settings.html';
 
-if(location.href.indexOf("manage_user/local_settings") !== -1) {
+if(/\/manage_user\/local_settings|\?view=local_settings/.test(location.href)) {
   // It's the settings page. Better show the user some settings.
   // As soon as the page is finished loading, that is.
   // I could use MutationObserver to make this more seamless, but that would
