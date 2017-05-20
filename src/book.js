@@ -42,7 +42,7 @@ export function fromFFHTML({ story: doc, storyPage, chapterPages, includeAuthors
     elements.push(titleElement);
     
     for(let el = chapterTitleH3.nextElementSibling; el !== nextAnchor; el = el.nextElementSibling) {
-      if(elements.length > 1 || !isEmptyParagraph(el)) { // skip any leading <p></p>.
+      if(!el.matches('base') && (elements.length > 1 || !isEmptyParagraph(el))) { // skip <base> and leading <p></p>.
         elements.push(el);
       }
     }
