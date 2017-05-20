@@ -167,7 +167,7 @@ export function create() {
           littleEndian32(0), // disk number start / internal file attributes
           littleEndian32(type === 'directory' ? 0x10 : 0x20), // external file attributes
           littleEndian32(byteIndex), // relative offset of local header
-          nameBytes,
+          nameBytes
         );
         cdLength += 46 + nameBytes.byteLength;
         for(let i = 0; i < localRecord.length; ++i) {
@@ -181,7 +181,7 @@ export function create() {
         littleEndian16(filePromises.length), // total number of entries in the central directory
         littleEndian32(cdLength), // size of the central directory
         littleEndian32(byteIndex), // offset of start of central directory with respect to the starting disk number
-        littleEndian16(0), // .ZIP file comment length
+        littleEndian16(0) // .ZIP file comment length
       );
       return new Blob(data, { type: 'application/epub+zip' });
     });

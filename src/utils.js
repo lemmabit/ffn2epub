@@ -80,7 +80,7 @@ export function processTemplate(template, replacements) {
       // what a lovely bit of code, eh?
       template = template.replace(
         new RegExp(`\\{\\{\\s*${key.replace(/[\.\*\+\?\^\$\{\}\(\)\|\[\]\\]/g, '\\$&')}\\s*\\}\\}`, 'g'),
-        (match, offset, string) => flatten(replacement, '\n' + Array(offset - string.lastIndexOf('\n', offset)).join(' ')),
+        (match, offset, string) => flatten(replacement, '\n' + Array(offset - string.lastIndexOf('\n', offset)).join(' '))
       );
     }
   }
