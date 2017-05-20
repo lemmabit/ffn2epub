@@ -30,4 +30,4 @@ build/Release
 node_modules
 
 # Transpiled output
-/fimfiction-to-epub.js
+/fimfiction-to-epub.user.js

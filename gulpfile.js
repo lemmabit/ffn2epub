@@ -22,7 +22,7 @@ gulp.task('default', function() {
     ],
     format: 'es',
   })
-  .pipe(source('fimfiction-to-epub.js', './src'))
+  .pipe(source('fimfiction-to-epub.user.js', './src'))
   .pipe(header(fs.readFileSync('./src/header.js')))
   .pipe(gulp.dest('.'));
 });
