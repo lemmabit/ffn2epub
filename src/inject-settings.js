@@ -12,7 +12,7 @@ if(/\/manage_user\/local_settings|\?view=local_settings/.test(location.href)) {
     settingsTbody.innerHTML = resources_settings_html;
     
     const finishTbody = document.getElementById('saved_message').closest('tbody');
-    finishTbody.before(settingsTbody);
+    finishTbody.parentNode.insertBefore(settingsTbody, finishTbody);
     
     const includeAuthorsNotesInput = settingsTbody.querySelector('input[name="include_authors_notes"]');
     includeAuthorsNotesInput.checked = Settings.get('includeAuthorsNotes', true);
