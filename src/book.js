@@ -309,6 +309,8 @@ export function toEPUB(book) {
       }
       return `<li><a href="${slug}.xhtml">${escapeForXML(stringquotes(ch.title))}</a></li>`;
     }),
+    COVER_LI:           book.coverImageURL ? '<li><a epub:type="cover" href="cover-image.xhtml">Cover</a></li>' : '',
+    FIRST_CHAPTER_NAME: escapeForXML(`${slugs.get(book.chapters[0])}.xhtml`),
   }));
   ocfWriter.addFile('nav.ncx', processTemplate(resources_nav_ncx, {
     URI:                escapeForXML(book.url),

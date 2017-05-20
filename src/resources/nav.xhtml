@@ -18,5 +18,14 @@
         {{ CHAPTER_LIS }}
       </ol>
     </nav>
+    <nav epub:type="landmarks" aria-labelledby="landmarks" hidden="">
+      <h1 id="landmarks">Landmarks</h1>
+      <ol>
+        {{ COVER_LI }}
+        <li><a epub:type="introduction" href="long-desc.xhtml">Description</a></li>
+        <li><a epub:type="toc" href="#chapters">List of chapters</a></li>
+        <li><a epub:type="bodymatter" href="{{ FIRST_CHAPTER_NAME }}">Beginning of story</a></li>
+      </ol>
+    </nav>
   </body>
 </html>
