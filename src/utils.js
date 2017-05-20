@@ -1,4 +1,8 @@
 export function get(url, responseType) {
+  if(!url) {
+    // Let's get an actually useful stack trace for this case.
+    throw Error("Tried to get an empty URI!");
+  }
   let isDocument = false;
   if(responseType === 'document') {
     isDocument = true;
@@ -14,7 +18,8 @@ export function get(url, responseType) {
           if(!isDocument) {
             resolve(response);
           } else {
-            resolve(new DOMParser().parseFromString(response, 'text/html'));
+            // DURR HURR HURR
+            resolve(new DOMParser().parseFromString(response + `<base href="${escapeForHTML(location.href)}" />`, 'text/html'));
           }
         } else {
           reject(Error(`Got HTTP response code ${status} for URL ${url}`));
