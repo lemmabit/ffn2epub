@@ -45,6 +45,16 @@ window.addEventListener('click', ev => {
     a.click();
     document.body.removeChild(a);
     setTimeout(() => URL.revokeObjectURL(url), 100);
+    
+    if(includeAuthorsNotes) {
+      const readIcons = storyContentBox.querySelectorAll('.chapter-read-icon');
+      for(let i = 0; i < readIcons.length; ++i) {
+        // restore the original read/unread state.
+        // this will look weird, but it's for the user's own good.
+        readIcons[i].classList.toggle('chapter-read'); // set it to the wrong state.
+        readIcons[i].click(); // toggle it back to the right state.
+      }
+    }
   })
   .catch(err => {
     unsafeWindow.ShowErrorWindow(`
