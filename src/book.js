@@ -292,7 +292,7 @@ export function toEPUB(book) {
     IMAGE_ITEMS:        Array.from(images.values()).map(({ id, name, mime }) => {
       return `<item id="${escapeForXML(id)}" href="${escapeForXML(name)}" media-type="${escapeForXML(mime)}"${id === 'cover-image' ? ' properties="cover-image"' : ''} />`;
     }),
-    CHAPTER_ITEMREFS:   (book.coverImageURL ? ['<itemref idref="cover-image-page" linear="no" />'] : []).concat(['<itemref idref="long-desc" linear="no" />'], book.chapters.map(ch => {
+    CHAPTER_ITEMREFS:   (book.coverImageURL ? ['<itemref idref="cover-image-page" linear="no" />'] : []).concat(['<itemref idref="long-desc" linear="no" />', '<itemref idref="nav" linear="no" />'], book.chapters.map(ch => {
       const slug = slugs.get(ch);
       if(slug !== escapeForXML(slug)) {
         throw Error("Slugs should always be XML-safe!");
