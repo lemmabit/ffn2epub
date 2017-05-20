@@ -2,7 +2,7 @@ import { areStringsEquivalent, processTemplate, escapeForXML, makeSlug, renderDa
 import { heartquotes, stringquotes } from './heartquotes.js';
 import * as OCFWriter from './ocf-writer.js';
 
-// note that this function modifies `doc` in place.
+// note that this function modifies the passed-in documents in place.
 export function fromFFHTML({ story: doc, storyPage, chapterPages, includeAuthorsNotes }) {
   function isEmptyParagraph(el) {
     return el.outerHTML.toLowerCase() === '<p></p>';
@@ -116,6 +116,31 @@ export function fromFFHTML({ story: doc, storyPage, chapterPages, includeAuthors
   const descriptionMeta = storyPage.querySelector('meta[property="og:description"]');
   const description = descriptionMeta.getAttribute('content');
   
+  const longDescriptionDiv = storyPage.querySelector('.story_content_box .description');
+  const longDescription = (function() {
+    const elements = [];
+    for(let el = longDescriptionDiv.querySelector('.description > hr').nextElementSibling; el; el = el.nextElementSibling) {
+      if(elements.length > 0 || !isEmptyParagraph(el)) { // skip any leading <p></p>.
+        elements.push(el);
+      }
+    }
+    while(isEmptyParagraph(elements[elements.length - 1])) {
+      elements.pop(); // cut off any trailing <p></p>.
+    }
+    
+    const titleElement = storyPage.createElement('h1');
+    titleElement.classList.add('generated-chapter-title');
+    titleElement.textContent = title;
+    elements.unshift(titleElement);
+    
+    elements.forEach(heartquotes); // just like with chapters.
+    
+    return {
+      title,
+      elements,
+    };
+  })();
+  
   const datePublishedSpan = document.querySelector('.date_approved .published ~ span');
   const datePublishedParts = /(\d+)[a-z]* ([a-z]+) (\d+)/i.exec(datePublishedSpan.textContent);
   const datePublished = new Date();
@@ -153,6 +178,7 @@ export function fromFFHTML({ story: doc, storyPage, chapterPages, includeAuthors
     authorURL,
     coverImageURL,
     description,
+    longDescription,
     datePublished,
     contentRating,
     categories,
@@ -177,13 +203,18 @@ export function toEPUB(book) {
   ocfWriter.addFile('META-INF/container.xml', resources_container_xml);
   
   const slugs = new Map();
+  const descriptionAndChapters = [book.longDescription].concat(book.chapters);
   const chaptersLeadingZeroes = String(book.chapters.length).replace(/./g, '0');
   const images = new Map();
   const prereqPromises = new Map();
   const allNecessaryPromises = [];
   let imageCounter = 0;
-  book.chapters.forEach((chapter, index) => {
-    slugs.set(chapter, makeSlug(`${(chaptersLeadingZeroes + (index + 1)).slice(-chaptersLeadingZeroes.length)}-${chapter.title}`));
+  descriptionAndChapters.forEach((chapter, index) => {
+    if(chapter === book.longDescription) {
+      slugs.set(chapter, 'long-desc');
+    } else {
+      slugs.set(chapter, makeSlug(`${(chaptersLeadingZeroes + index).slice(-chaptersLeadingZeroes.length)}-${chapter.title}`));
+    }
     const promises = [];
     chapter.elements.forEach(el => {
       const imgs = el.getElementsByTagName('img');
@@ -251,7 +282,7 @@ export function toEPUB(book) {
     DESCRIPTION:        escapeForXML(book.description),
     PUBLISHED_DATE:     escapeForXML(renderDateString(book.datePublished)),
     COVER_IMAGE_META:   book.coverImageURL ? '<meta name="cover" content="cover-image" />' : '',
-    CHAPTER_ITEMS:      (book.coverImageURL ? ['<item id="cover-image-page" href="cover-image.xhtml" media-type="application/xhtml+xml" properties="svg" />'] : []).concat(book.chapters.map(ch => {
+    CHAPTER_ITEMS:      (book.coverImageURL ? ['<item id="cover-image-page" href="cover-image.xhtml" media-type="application/xhtml+xml" properties="svg" />'] : []).concat(['<item id="long-desc" href="long-desc.xhtml" media-type="application/xhtml+xml" />'], book.chapters.map(ch => {
       const slug = slugs.get(ch);
       if(slug !== escapeForXML(slug)) {
         throw Error("Slugs should always be XML-safe!");
@@ -261,7 +292,7 @@ export function toEPUB(book) {
     IMAGE_ITEMS:        Array.from(images.values()).map(({ id, name, mime }) => {
       return `<item id="${escapeForXML(id)}" href="${escapeForXML(name)}" media-type="${escapeForXML(mime)}"${id === 'cover-image' ? ' properties="cover-image"' : ''} />`;
     }),
-    CHAPTER_ITEMREFS:   (book.coverImageURL ? ['<itemref idref="cover-image-page" linear="no" />'] : []).concat(book.chapters.map(ch => {
+    CHAPTER_ITEMREFS:   (book.coverImageURL ? ['<itemref idref="cover-image-page" linear="no" />'] : []).concat(['<itemref idref="long-desc" linear="no" />'], book.chapters.map(ch => {
       const slug = slugs.get(ch);
       if(slug !== escapeForXML(slug)) {
         throw Error("Slugs should always be XML-safe!");
@@ -299,12 +330,13 @@ export function toEPUB(book) {
   ocfWriter.addFile('style.css', resources_style_css);
   if(book.coverImageURL) {
     ocfWriter.addFile('cover-image.xhtml', coverImageElementPromise.then(({ name, img }) => processTemplate(resources_cover_image_xhtml, {
-      IMAGE_WIDTH: escapeForXML(img.naturalWidth),
-      IMAGE_HEIGHT: escapeForXML(img.naturalHeight),
-      IMAGE_NAME: escapeForXML(name),
+      STORY_TITLE:        escapeForXML(stringquotes(book.title)),
+      IMAGE_WIDTH:        escapeForXML(img.naturalWidth),
+      IMAGE_HEIGHT:       escapeForXML(img.naturalHeight),
+      IMAGE_NAME:         escapeForXML(name),
     })));
   }
-  book.chapters.forEach(chapter => {
+  descriptionAndChapters.forEach(chapter => {
     const slug = slugs.get(chapter);
     const prereq = prereqPromises.get(chapter);
     ocfWriter.addFile(`${slug}.xhtml`, prereq.then(() => processTemplate(resources_chapter_xhtml, {
