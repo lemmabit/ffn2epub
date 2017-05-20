@@ -9,6 +9,9 @@
         list-style-type: none;
         line-height: 2.5em;
       }
+      .hidden {
+        display: none;
+      }
     </style>
   </head>
   <body>
@@ -18,7 +21,7 @@
         {{ CHAPTER_LIS }}
       </ol>
     </nav>
-    <nav epub:type="landmarks" aria-labelledby="landmarks" hidden="">
+    <nav epub:type="landmarks" class="hidden" aria-labelledby="landmarks" hidden="">
       <h1 id="landmarks">Landmarks</h1>
       <ol>
         {{ COVER_LI }}
