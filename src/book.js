@@ -377,6 +377,10 @@ function renderAsXHTML(el, images) {
       name = name.toLowerCase();
       if(tagName === 'img' && name === 'src') {
         value = images.get(el.src).name;
+      } else if(name === 'src' && typeof el.src === 'string') {
+        value = el.src;
+      } else if(name === 'href' && typeof el.href === 'string') {
+        value = el.href;
       }
       if(name !== 'class') {
         out += ` ${name}="${escapeForXML(value)}"`;
