@@ -2,6 +2,10 @@
 
 This userscript enhances [Fimfiction](https://www.fimfiction.net/)'s "Download Story (.epub)" button with a custom generator. Its publications ought to be compatible with EPUB 2.0, EPUB 3.0, and EPUB 3.1 readers.
 
+## Installation
+
+[The script can be installed from OpenUserJS.org.](https://openuserjs.org/scripts/Permutatrix/Fimfiction_to_EPUB)
+
 ## Why?
 
 I thought it was really cool when I found out that Fimfiction had a built-in EPUB generator for reading offline and on e-readers, but its output seemed a little barren to me. Since I didn't have an actual use for it myself at the time, my solution was to put together EPUB versions of my own stories (well, one of the two stories I've published so far at the time of this writing) for the benefit of other people.
