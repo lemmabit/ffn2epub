@@ -36,7 +36,6 @@ window.addEventListener('click', ev => {
     }));
   })
   .then(({ filename, blob }) => {
-    throw Error();
     const a = document.createElement('a');
     a.style.display = 'none';
     const url = URL.createObjectURL(blob);
