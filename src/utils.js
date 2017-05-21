@@ -35,6 +35,27 @@ export function get(url, responseType) {
   });
 }
 
+export function showCustomError(html, options) {
+  const { width } = options || {};
+  
+  // This is adapted from the `ShowErrorWindow` code from Fimfiction.net.
+  // Probably not supposed to do that, technically.
+  // But I don't imagine anyone cares.
+  const menu = new unsafeWindow.PopUpMenu('', '<i class="fa fa-warning"></i> Error');
+  menu.SetContent('');
+  menu.SetCloseOnHoverOut(false);
+  menu.SetFixed(true);
+  menu.SetContent(`<center style="padding: 18px;">${html}</center>`);
+  menu.SetFooter('<center><button id="alert_button" class="styled_button" style="padding: 5px 40px;">Ok</button></center>');
+  menu.SetWidth(String(width || '350px'));
+  menu.Show();
+  document.getElementById('alert_button').addEventListener('click', ev => {
+    ev.preventDefault();
+    ev.stopPropagation();
+    menu.Close()
+  }, true);
+}
+
 export function makeSafeUint8Array(dumb) {
   const data = dumb.wrappedJSObject || dumb;
   
