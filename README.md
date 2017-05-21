@@ -16,6 +16,7 @@ So I wrote this script to put together EPUB versions of *everyone's* stories. Fo
 
 ## Features for normal people
 
+* Formatting, e.g. italics and centered text
 * Cover image
 * Inline images, including emotes
 * Long description
