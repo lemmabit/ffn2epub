@@ -39,15 +39,9 @@ img {
 
 .authors-note {
   /* Intended to mimic the native appearance of A/N's on Fimfiction. */
-  margin: 0;
-  margin-bottom: 1.15em;
+  margin: 1.15em 0;
 	padding: 1em;
 	background: #e7e7e7;
 	border-radius: 3px;
 	border: 1px solid #ccc;
-}
-
-* + .authors-note {
-  margin-top: 1.15em;
-  margin-bottom: 0;
 }
