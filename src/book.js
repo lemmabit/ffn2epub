@@ -195,12 +195,54 @@ import resources_chapter_xhtml from './resources/chapter.xhtml';
 import resources_cover_image_xhtml from './resources/cover-image.xhtml';
 import resources_style_css from './resources/style.css';
 
-export function toEPUB(book, { epubVersion }) {
+export function toEPUB(book, { centerHeadings, autoHyphens, epubVersion }) {
   const now = new Date();
   now.setUTCMilliseconds(0);
   
   const ocfWriter = OCFWriter.create();
   ocfWriter.addFile('META-INF/container.xml', resources_container_xml);
+  
+  const customCSS = (function() {
+    let hyphenationCSS = `
+      h1, .chapter-title {
+        hyphens: none;
+        -epub-hyphens: none;
+        -webkit-hyphens: none;
+        -moz-hyphens: none;
+        adobe-hyphenate: none;
+      }
+      `;
+    if(autoHyphens === 'never') {
+      hyphenationCSS = `
+      html, body {
+        hyphens: none;
+        -epub-hyphens: none;
+        -webkit-hyphens: none;
+        -moz-hyphens: none;
+        adobe-hyphenate: none;
+      }
+      `;
+    } else if(autoHyphens === 'always') {
+      hyphenationCSS = `
+      html, body {
+        hyphens: auto;
+        -epub-hyphens: auto;
+        -webkit-hyphens: auto;
+        -moz-hyphens: auto;
+        adobe-hyphenate: auto;
+      }
+      ` + hyphenationCSS;
+    }
+    let headingsCSS = '';
+    if(centerHeadings) {
+      headingsCSS = `
+      h1 {
+        text-align: center;
+      }
+      `;
+    }
+    return (hyphenationCSS + headingsCSS).trim().split(/\n {0,6}/);
+  })();
   
   const slugs = new Map();
   const descriptionAndChapters = [book.longDescription].concat(book.chapters);
@@ -302,6 +344,7 @@ export function toEPUB(book, { epubVersion }) {
   })));
   ocfWriter.addFile('nav.xhtml', processTemplate(resources_nav_xhtml, {
     STORY_TITLE:        escapeForXML(stringquotes(book.title)),
+    CUSTOM_CSS:         customCSS,
     CHAPTER_LIS:        book.chapters.map(ch => {
       const slug = slugs.get(ch);
       if(slug !== escapeForXML(slug)) {
@@ -329,7 +372,9 @@ export function toEPUB(book, { epubVersion }) {
       ];
     }),
   }));
-  ocfWriter.addFile('style.css', resources_style_css);
+  ocfWriter.addFile('style.css', processTemplate(resources_style_css, {
+    CUSTOM_CSS:         customCSS,
+  }));
   if(book.coverImageURL) {
     ocfWriter.addFile('cover-image.xhtml', coverImageElementPromise.then(({ name, img }) => processTemplate(resources_cover_image_xhtml, {
       STORY_TITLE:        escapeForXML(stringquotes(book.title)),

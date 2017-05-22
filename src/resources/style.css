@@ -1,20 +1,4 @@
-html, body {
-  hyphens: auto;
-  -epub-hyphens: auto;
-  -webkit-hyphens: auto;
-  -moz-hyphens: auto;
-  adobe-hyphenate: auto;
-}
-
-h1, .chapter-title {
-  hyphens: none;
-  -epub-hyphens: none;
-  -webkit-hyphens: none;
-  -moz-hyphens: none;
-  adobe-hyphenate: none;
-}
-
-h1, .center {
+.center {
   text-align: center;
 }
 
@@ -45,3 +29,5 @@ img {
 	border-radius: 3px;
 	border: 1px solid #ccc;
 }
+
+{{ CUSTOM_CSS }}

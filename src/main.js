@@ -1,12 +1,14 @@
 import { get, escapeForHTML, showCustomError } from './utils.js';
 import * as Book from './book.js';
-import * as Settings from './settings.js';
-
-import './inject-settings.js';
+import { getSettings } from './inject-settings.js';
 
 window.addEventListener('click', ev => {
-  const includeAuthorsNotes = Settings.get('includeAuthorsNotes', true);
-  const epubVersion = Settings.get('epubVersion', '3.0');
+  const {
+    includeAuthorsNotes,
+    centerHeadings,
+    autoHyphens,
+    epubVersion,
+  } = getSettings();
   
   const a = ev.target.closest('a[href^="/download_epub.php"]');
   if(!a) return;
@@ -29,8 +31,17 @@ window.addEventListener('click', ev => {
     get(`/download_story.php?story=${storyID}&html`, 'document'),
   ])
   .then(([{ storyPage, chapterPages }, story]) => {
-    const book = Book.fromFFHTML({ story, storyPage, chapterPages, includeAuthorsNotes });
-    return Book.toEPUB(book, { epubVersion }).then(blob => ({
+    const book = Book.fromFFHTML({
+      story,
+      storyPage,
+      chapterPages,
+      includeAuthorsNotes,
+    });
+    return Book.toEPUB(book, {
+      centerHeadings,
+      autoHyphens,
+      epubVersion,
+    }).then(blob => ({
       filename: `${book.title} - ${book.author}.epub`,
       blob,
     }));
