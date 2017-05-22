@@ -17,7 +17,7 @@ const settingsConfig = [
   },
   {
     key: 'autoHyphens',
-    defaultValue: 'always',
+    defaultValue: 'unspecified',
     selector: 'select[name="automatic_hyphens"]',
     property: 'value',
   },
