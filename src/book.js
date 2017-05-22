@@ -232,6 +232,16 @@ export function toEPUB(book, { centerHeadings, autoHyphens, epubVersion }) {
         adobe-hyphenate: auto;
       }
       ` + hyphenationCSS;
+    } else if(autoHyphens === 'always+shy') {
+      hyphenationCSS = `
+      html, body {
+        hyphens: manual;
+        -epub-hyphens: manual;
+        -webkit-hyphens: manual;
+        -moz-hyphens: manual;
+        adobe-hyphenate: explicit;
+      }
+      ` + hyphenationCSS;
     }
     let headingsCSS = '';
     if(centerHeadings) {
@@ -389,15 +399,26 @@ export function toEPUB(book, { centerHeadings, autoHyphens, epubVersion }) {
     ocfWriter.addFile(`${slug}.xhtml`, prereq.then(() => processTemplate(resources_chapter_xhtml, {
       STORY_TITLE:        escapeForXML(stringquotes(book.title)),
       CHAPTER_TITLE:      escapeForXML(stringquotes(chapter.title)),
-      ELEMENTS:           chapter.elements.map(el => renderAsXHTML(el, images)),
+      ELEMENTS:           chapter.elements.map(el => renderAsXHTML({
+        el, images,
+        doHyphenate: autoHyphens === 'always+shy',
+      })),
     })));
   });
   return resourcesPromise.then(() => ocfWriter.generate());
 }
 
+import Hypher from 'hypher';
+import english from 'hyphenation.en-us';
+let hypher;
+
 const reVoidTag = /^(?:area|base|br|col|embed|hr|img|input|keygen|link|meta|param|source|track|wbr)$/i;
 
-function renderAsXHTML(el, images) {
+function renderAsXHTML({ el, images, doHyphenate }) {
+  if(doHyphenate && !hypher) {
+    hypher = new Hypher(english);
+  }
+  
   var TEXT_NODE = Element.TEXT_NODE, ELEMENT_NODE = Element.ELEMENT_NODE;
   
   function render(el) {
@@ -443,7 +464,11 @@ function renderAsXHTML(el, images) {
     for(let i = 0; i < children.length; ++i) {
       var child = children[i];
       if(child.nodeType === TEXT_NODE) {
-        out += escapeForXML(child.nodeValue);
+        let text = child.nodeValue;
+        if(doHyphenate && !el.closest('h1, .chapter-title')) {
+          text = hypher.hyphenateText(text);
+        }
+        out += escapeForXML(text);
       } else if(child.nodeType === ELEMENT_NODE) {
         out += render(child);
       }

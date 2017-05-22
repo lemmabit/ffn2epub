@@ -20,6 +20,8 @@
   "devDependencies": {
     "gulp": "^3.9.1",
     "gulp-header": "^1.8.8",
+    "hyphenation.en-us": "^0.2.1",
+    "hypher": "^0.2.5",
     "pako": "^1.0.5",
     "rollup-plugin-commonjs": "^8.0.2",
     "rollup-plugin-node-resolve": "^3.0.0",
