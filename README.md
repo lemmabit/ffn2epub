@@ -21,7 +21,6 @@ So I wrote this script to put together EPUB versions of *everyone's* stories. Fo
 * Inline images, including emotes
 * Long description
 * Table of contents
-* Author's notes
 * Nice-looking apostrophes and quotation marks
 * Customizable via Fimfiction's "Settings" page
 
