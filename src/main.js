@@ -4,7 +4,6 @@ import { getSettings } from './inject-settings.js';
 
 window.addEventListener('click', ev => {
   const {
-    includeAuthorsNotes,
     centerHeadings,
     autoHyphens,
     epubVersion,
@@ -17,25 +16,11 @@ window.addEventListener('click', ev => {
   const storyID = decodeURIComponent(match[1]);
   const storyContentBox = a.closest('.story_content_box');
   
-  Promise.all([
-    get(storyContentBox.querySelector('a.story_name').href, 'document').then(storyPage => {
-      if(includeAuthorsNotes) {
-        return Promise.all(
-          [...storyPage.querySelectorAll('.story_content_box a.chapter_link')]
-          .map(a => get(a.href, 'document'))
-        ).then(chapterPages => ({ storyPage, chapterPages }));
-      } else {
-        return { storyPage, chapterPages: undefined };
-      }
-    }),
-    get(`/download_story.php?story=${storyID}&html`, 'document'),
-  ])
-  .then(([{ storyPage, chapterPages }, story]) => {
+  get(`/download_story.php?story=${storyID}&html`, 'document')
+  .then(story => {
     const book = Book.fromFFHTML({
       story,
-      storyPage,
-      chapterPages,
-      includeAuthorsNotes,
+      storyContentBox,
     });
     return Book.toEPUB(book, {
       centerHeadings,
@@ -56,16 +41,6 @@ window.addEventListener('click', ev => {
     a.click();
     document.body.removeChild(a);
     setTimeout(() => URL.revokeObjectURL(url), 100);
-    
-    if(includeAuthorsNotes) {
-      const readIcons = storyContentBox.querySelectorAll('.chapter-read-icon');
-      for(let i = 0; i < readIcons.length; ++i) {
-        // restore the original read/unread state.
-        // this will look weird, but it's for the user's own good.
-        readIcons[i].classList.toggle('chapter-read'); // set it to the wrong state.
-        readIcons[i].click(); // toggle it back to the right state.
-      }
-    }
   })
   .catch(err => {
     showCustomError(`

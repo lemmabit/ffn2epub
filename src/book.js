@@ -3,7 +3,7 @@ import { heartquotes, stringquotes } from './heartquotes.js';
 import * as OCFWriter from './ocf-writer.js';
 
 // note that this function modifies the passed-in documents in place.
-export function fromFFHTML({ story: doc, storyPage, chapterPages, includeAuthorsNotes }) {
+export function fromFFHTML({ story: doc, storyContentBox }) {
   function isEmptyParagraph(el) {
     return el.outerHTML.toLowerCase() === '<p></p>';
   }
@@ -54,29 +54,6 @@ export function fromFFHTML({ story: doc, storyPage, chapterPages, includeAuthors
       elements.pop(); // cut off any trailing <p></p>.
     }
     
-    if(includeAuthorsNotes) {
-      const chapterPage = chapterPages[i];
-      const chapterContainer = chapterPage.getElementById('chapter_container');
-      
-      let notes, notesPosition = 'none';
-      if((notes = chapterContainer.nextElementSibling) && notes.matches('.authors-note')) {
-        notesPosition = 'bottom';
-      } else if((notes = chapterContainer.previousElementSibling) && notes.matches('.authors-note')) {
-        notesPosition = 'top';
-      }
-      
-      if(notesPosition !== 'none') {
-        notes = notes.cloneNode(true);
-        notes.removeAttribute('style');
-      }
-      
-      if(notesPosition === 'bottom') {
-        elements.push(notes);
-      } else if(notesPosition === 'top') {
-        elements.unshift(notes);
-      }
-    }
-    
     elements.forEach(heartquotes); // smartify quotes and ellipses.
     
     chapters.push({
@@ -110,25 +87,26 @@ export function fromFFHTML({ story: doc, storyPage, chapterPages, includeAuthors
   // this will lead to redundancy in some cases, but that's better than
   // inconsistency.
   
-  const coverImageA = storyPage.querySelector('.story_image a');
+  const coverImageA = storyContentBox.querySelector('.story_image a');
   const coverImageURL = coverImageA && coverImageA.href;
   
-  const descriptionMeta = storyPage.querySelector('meta[property="og:description"]');
-  const description = descriptionMeta.getAttribute('content');
-  
-  const longDescriptionDiv = storyPage.querySelector('.story_content_box .description');
+  const longDescriptionDiv = storyContentBox.querySelector('.description');
+  let description = "";
   const longDescription = (function() {
     const elements = [];
     for(let el = longDescriptionDiv.querySelector('.description > hr').nextElementSibling; el; el = el.nextElementSibling) {
       if(elements.length > 0 || !isEmptyParagraph(el)) { // skip any leading <p></p>.
         elements.push(el);
+        description += el.textContent;
+        description += " ";
       }
     }
+    description = description.trim();
     while(isEmptyParagraph(elements[elements.length - 1])) {
       elements.pop(); // cut off any trailing <p></p>.
     }
     
-    const titleElement = storyPage.createElement('h1');
+    const titleElement = document.createElement('h1');
     titleElement.classList.add('generated-chapter-title');
     titleElement.textContent = title;
     elements.unshift(titleElement);
@@ -155,16 +133,16 @@ export function fromFFHTML({ story: doc, storyPage, chapterPages, includeAuthors
   }[datePublishedParts[2].slice(0, 3).toLowerCase()] |0);
   datePublished.setUTCFullYear(datePublishedParts[3] |0);
   
-  const contentRatingA = storyPage.querySelector('.story_content_box [class*="content-rating-"]');
+  const contentRatingA = storyContentBox.querySelector('[class*="content-rating-"]');
   const { contentRating } = [
     { className: 'content-rating-everyone', contentRating: 'Everyone' },
     { className: 'content-rating-teen',     contentRating: 'Teen' },
     { className: 'content-rating-mature',   contentRating: 'Mature' },
   ].find(({ className }) => contentRatingA.classList.contains(className));
   
-  const categories = [...storyPage.querySelectorAll('.story_content_box .story_category')].map(a => a.textContent.trim());
+  const categories = [...storyContentBox.querySelectorAll('.story_category')].map(a => a.textContent.trim());
   
-  const characterTags = [...storyPage.querySelectorAll('.story_content_box a.character_icon')].map(a => {
+  const characterTags = [...storyContentBox.querySelectorAll('a.character_icon')].map(a => {
     return {
       human: a.title,
       machine: /\/([^\/]+)$/.exec(a.getAttribute('href'))[1],

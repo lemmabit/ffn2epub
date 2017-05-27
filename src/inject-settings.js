@@ -4,12 +4,6 @@ import resources_settings_html from './resources/settings.html';
 
 const settingsConfig = [
   {
-    key: 'includeAuthorsNotes',
-    defaultValue: true,
-    selector: 'input[name="include_authors_notes"]',
-    property: 'checked',
-  },
-  {
     key: 'centerHeadings',
     defaultValue: true,
     selector: 'input[name="center_headings"]',
