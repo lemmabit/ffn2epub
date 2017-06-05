@@ -3,7 +3,7 @@ import { heartquotes, stringquotes } from './heartquotes.js';
 import * as OCFWriter from './ocf-writer.js';
 
 // note that this function modifies the passed-in documents in place.
-export function fromFFHTML({ story: doc, storyContentBox }) {
+export function fromFFHTML({ story: doc, storyContainer }) {
   function isEmptyParagraph(el) {
     return el.outerHTML.toLowerCase() === '<p></p>';
   }
@@ -87,14 +87,14 @@ export function fromFFHTML({ story: doc, storyContentBox }) {
   // this will lead to redundancy in some cases, but that's better than
   // inconsistency.
   
-  const coverImageA = storyContentBox.querySelector('.story_image a');
-  const coverImageURL = coverImageA && coverImageA.href;
+  const coverImageImg = storyContainer.querySelector('.story_container__story_image img');
+  const coverImageURL = coverImageImg && coverImageImg.getAttribute('data-fullsize');
   
-  const longDescriptionDiv = storyContentBox.querySelector('.description');
+  const longDescriptionDiv = storyContainer.querySelector('.description-text');
   let description = "";
   const longDescription = (function() {
     const elements = [];
-    for(let el = longDescriptionDiv.querySelector('.description > hr').nextElementSibling; el; el = el.nextElementSibling) {
+    for(let el = longDescriptionDiv.firstElementChild; el; el = el.nextElementSibling) {
       if(elements.length > 0 || !isEmptyParagraph(el)) { // skip any leading <p></p>.
         elements.push(el);
         description += el.textContent;
@@ -119,30 +119,19 @@ export function fromFFHTML({ story: doc, storyContentBox }) {
     };
   })();
   
-  const datePublishedSpan = document.querySelector('.date_approved .published ~ span');
-  const datePublishedParts = /(\d+)[a-z]* ([a-z]+) (\d+)/i.exec(datePublishedSpan.textContent);
-  const datePublished = new Date();
-  datePublished.setUTCMilliseconds(0);
-  datePublished.setUTCSeconds(0);
-  datePublished.setUTCMinutes(0);
-  datePublished.setUTCHours(0);
-  datePublished.setUTCDate(datePublishedParts[1] |0);
-  datePublished.setUTCMonth({
-    jan: 0, feb: 1, mar: 2, apr: 3, may: 4, jun: 5,
-    jul: 6, aug: 7, sep: 8, oct: 9, nov: 10, dec: 11,
-  }[datePublishedParts[2].slice(0, 3).toLowerCase()] |0);
-  datePublished.setUTCFullYear(datePublishedParts[3] |0);
+  const datePublishedSpan = document.querySelector('.approved-date span[data-time]');
+  const datePublished = new Date((datePublishedSpan.getAttribute('data-time') |0) * 1000);
   
-  const contentRatingA = storyContentBox.querySelector('[class*="content-rating-"]');
+  const contentRatingA = storyContainer.querySelector('[class*="content-rating-"]');
   const { contentRating } = [
     { className: 'content-rating-everyone', contentRating: 'Everyone' },
     { className: 'content-rating-teen',     contentRating: 'Teen' },
     { className: 'content-rating-mature',   contentRating: 'Mature' },
   ].find(({ className }) => contentRatingA.classList.contains(className));
   
-  const categories = [...storyContentBox.querySelectorAll('.story_category')].map(a => a.textContent.trim());
+  const categories = [...storyContainer.querySelectorAll('.tag-genre')].map(a => a.textContent.trim());
   
-  const characterTags = [...storyContentBox.querySelectorAll('a.character_icon')].map(a => {
+  const characterTags = [...storyContainer.querySelectorAll('.tag-character')].map(a => {
     return {
       human: a.title,
       machine: /\/([^\/]+)$/.exec(a.getAttribute('href'))[1],

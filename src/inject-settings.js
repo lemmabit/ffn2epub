@@ -23,7 +23,7 @@ const settingsConfig = [
   },
 ];
 
-if(/\/manage_user\/local_settings|\?view=local_settings/.test(location.href)) {
+if(/\/manage\/local-settings/.test(location.href)) {
   // It's the settings page. Better show the user some settings.
   // As soon as the page is finished loading, that is.
   // I could use MutationObserver to make this more seamless, but that would
@@ -32,20 +32,24 @@ if(/\/manage_user\/local_settings|\?view=local_settings/.test(location.href)) {
     const settingsTbody = document.createElement('tbody');
     settingsTbody.innerHTML = resources_settings_html;
     
-    const finishTbody = document.getElementById('saved_message').closest('tbody');
-    finishTbody.parentNode.insertBefore(settingsTbody, finishTbody);
+    const finishTbody = document.querySelector('#local_site_settings tbody');
+    while(settingsTbody.firstChild) {
+      const el = settingsTbody.firstChild;
+      settingsTbody.removeChild(el);
+      finishTbody.appendChild(el);
+    }
     
     for(let i = 0; i < settingsConfig.length; ++i) {
       const { key, defaultValue, selector, property } = settingsConfig[i];
-      settingsTbody.querySelector(selector)[property] = Settings.get(key, defaultValue);
+      const element = finishTbody.querySelector(selector);
+      element[property] = Settings.get(key, defaultValue);
+      const doSet = ({ target }) => {
+        Settings.set(key, element[property]);
+      };
+      ['change', 'input', 'click', 'submit'].forEach(name => {
+        element.addEventListener(name, doSet, false);
+      });
     }
-    
-    finishTbody.querySelector('button').addEventListener('click', () => {
-      for(let i = 0; i < settingsConfig.length; ++i) {
-        const { key, selector, property } = settingsConfig[i];
-        Settings.set(key, settingsTbody.querySelector(selector)[property]);
-      }
-    }, true);
   });
 }
 

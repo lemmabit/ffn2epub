@@ -9,18 +9,19 @@ window.addEventListener('click', ev => {
     epubVersion,
   } = getSettings();
   
-  const a = ev.target.closest('a[href^="/download_epub.php"]');
+  const a = ev.target.closest('a[title="Download Story (.epub)"]');
   if(!a) return;
-  const match = /[\?&]story=([^&]*)/.exec(a.href);
+  const match = /download\/(\d+)\/epub/.exec(a.href);
   if(!match) return;
   const storyID = decodeURIComponent(match[1]);
-  const storyContentBox = a.closest('.story_content_box');
+  const storyContainer = a.closest('.story_container');
   
-  get(`/download_story.php?story=${storyID}&html`, 'document')
+  Promise.resolve()
+  .then(() => get(storyContainer.querySelector('a[title="Download Story (.html)"]').href, 'document'))
   .then(story => {
     const book = Book.fromFFHTML({
       story,
-      storyContentBox,
+      storyContainer,
     });
     return Book.toEPUB(book, {
       centerHeadings,

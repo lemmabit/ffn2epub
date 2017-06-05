@@ -11,7 +11,13 @@ p.indented {
   text-indent: 3em;
 }
 
-p.double {
+/* A bunch of selectors from Fimfiction itself. */
+.bbcode-center, .embed-container,
+p, blockquote, hr, ul, ol, pre, figure,
+h1, h2, h3, h4, h5, h6,
+.imgur-embed-iframe-pub, .oembed,
+.story-embed, .bbcode__block,
+.bbcode-right, .excerpt, .plaque {
   margin-top: 1.15em;
 }
 
