@@ -5,6 +5,7 @@ import { getSettings } from './inject-settings.js';
 window.addEventListener('click', ev => {
   const {
     centerHeadings,
+    enableHeartquotes,
     autoHyphens,
     epubVersion,
   } = getSettings();
@@ -22,9 +23,11 @@ window.addEventListener('click', ev => {
     const book = Book.fromFFHTML({
       story,
       storyContainer,
+      enableHeartquotes,
     });
     return Book.toEPUB(book, {
       centerHeadings,
+      enableHeartquotes,
       autoHyphens,
       epubVersion,
     }).then(blob => ({

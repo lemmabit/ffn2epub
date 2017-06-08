@@ -3,7 +3,7 @@ import { heartquotes, stringquotes } from './heartquotes.js';
 import * as OCFWriter from './ocf-writer.js';
 
 // note that this function modifies the passed-in documents in place.
-export function fromFFHTML({ story: doc, storyContainer }) {
+export function fromFFHTML({ story: doc, storyContainer, enableHeartquotes }) {
   function isEmptyParagraph(el) {
     return el.outerHTML.toLowerCase() === '<p></p>';
   }
@@ -54,7 +54,9 @@ export function fromFFHTML({ story: doc, storyContainer }) {
       elements.pop(); // cut off any trailing <p></p>.
     }
     
-    elements.forEach(heartquotes); // smartify quotes and ellipses.
+    if(enableHeartquotes) {
+      elements.forEach(heartquotes); // smartify quotes and ellipses.
+    }
     
     chapters.push({
       title: chapterTitle,
@@ -111,7 +113,9 @@ export function fromFFHTML({ story: doc, storyContainer }) {
     titleElement.textContent = title;
     elements.unshift(titleElement);
     
-    elements.forEach(heartquotes); // just like with chapters.
+    if(enableHeartquotes) {
+      elements.forEach(heartquotes); // just like with chapters.
+    }
     
     return {
       title,
@@ -162,7 +166,15 @@ import resources_chapter_xhtml from './resources/chapter.xhtml';
 import resources_cover_image_xhtml from './resources/cover-image.xhtml';
 import resources_style_css from './resources/style.css';
 
-export function toEPUB(book, { centerHeadings, autoHyphens, epubVersion }) {
+export function toEPUB(book, { centerHeadings, enableHeartquotes, autoHyphens, epubVersion }) {
+  function maybeStringquotes(string) {
+    if(enableHeartquotes) {
+      return stringquotes(string);
+    } else {
+      return string;
+    }
+  }
+  
   const now = new Date();
   now.setUTCMilliseconds(0);
   
@@ -320,14 +332,14 @@ export function toEPUB(book, { centerHeadings, autoHyphens, epubVersion }) {
     })),
   })));
   ocfWriter.addFile('nav.xhtml', processTemplate(resources_nav_xhtml, {
-    STORY_TITLE:        escapeForXML(stringquotes(book.title)),
+    STORY_TITLE:        escapeForXML(maybeStringquotes(book.title)),
     CUSTOM_CSS:         customCSS,
     CHAPTER_LIS:        book.chapters.map(ch => {
       const slug = slugs.get(ch);
       if(slug !== escapeForXML(slug)) {
         throw Error("Slugs should always be XML-safe!");
       }
-      return `<li><a href="${slug}.xhtml">${escapeForXML(stringquotes(ch.title))}</a></li>`;
+      return `<li><a href="${slug}.xhtml">${escapeForXML(maybeStringquotes(ch.title))}</a></li>`;
     }),
     COVER_LI:           book.coverImageURL ? '<li><a epub:type="cover" href="cover-image.xhtml">Cover</a></li>' : '',
     FIRST_CHAPTER_NAME: escapeForXML(`${slugs.get(book.chapters[0])}.xhtml`),
@@ -354,7 +366,7 @@ export function toEPUB(book, { centerHeadings, autoHyphens, epubVersion }) {
   }));
   if(book.coverImageURL) {
     ocfWriter.addFile('cover-image.xhtml', coverImageElementPromise.then(({ name, img }) => processTemplate(resources_cover_image_xhtml, {
-      STORY_TITLE:        escapeForXML(stringquotes(book.title)),
+      STORY_TITLE:        escapeForXML(maybeStringquotes(book.title)),
       IMAGE_WIDTH:        escapeForXML(img.naturalWidth),
       IMAGE_HEIGHT:       escapeForXML(img.naturalHeight),
       IMAGE_NAME:         escapeForXML(name),
@@ -364,8 +376,8 @@ export function toEPUB(book, { centerHeadings, autoHyphens, epubVersion }) {
     const slug = slugs.get(chapter);
     const prereq = prereqPromises.get(chapter);
     ocfWriter.addFile(`${slug}.xhtml`, prereq.then(() => processTemplate(resources_chapter_xhtml, {
-      STORY_TITLE:        escapeForXML(stringquotes(book.title)),
-      CHAPTER_TITLE:      escapeForXML(stringquotes(chapter.title)),
+      STORY_TITLE:        escapeForXML(maybeStringquotes(book.title)),
+      CHAPTER_TITLE:      escapeForXML(maybeStringquotes(chapter.title)),
       ELEMENTS:           chapter.elements.map(el => renderAsXHTML({
         el, images,
         doHyphenate: autoHyphens === 'always+shy',

@@ -10,6 +10,12 @@ const settingsConfig = [
     property: 'checked',
   },
   {
+    key: 'enableHeartquotes',
+    defaultValue: true,
+    selector: 'input[name="enable_heartquotes"]',
+    property: 'checked',
+  },
+  {
     key: 'autoHyphens',
     defaultValue: 'unspecified',
     selector: 'select[name="automatic_hyphens"]',
