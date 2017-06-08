@@ -11,7 +11,8 @@ p.indented {
   text-indent: 3em;
 }
 
-/* A bunch of selectors from Fimfiction itself. */
+/* Mostly a bunch of selectors from Fimfiction itself. */
+.generated-author-attribution,
 .bbcode-center, .embed-container,
 p, blockquote, hr, ul, ol, pre, figure,
 h1, h2, h3, h4, h5, h6,
@@ -25,6 +26,12 @@ img {
   margin: 0;
   padding: 0;
   max-width: 90%;
+}
+
+.generated-author-attribution {
+  font-weight: bold;
+  font-size: 1.1em;
+  text-align: center;
 }
 
 .authors-note {

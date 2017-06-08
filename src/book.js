@@ -111,7 +111,10 @@ export function fromFFHTML({ story: doc, storyContainer, enableHeartquotes }) {
     const titleElement = document.createElement('h1');
     titleElement.classList.add('generated-chapter-title');
     titleElement.textContent = title;
-    elements.unshift(titleElement);
+    const authorElement = document.createElement('div');
+    authorElement.classList.add('generated-author-attribution');
+    authorElement.textContent = `by ${author}`;
+    elements.unshift(titleElement, authorElement);
     
     if(enableHeartquotes) {
       elements.forEach(heartquotes); // just like with chapters.
