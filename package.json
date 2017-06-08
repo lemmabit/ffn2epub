@@ -4,6 +4,7 @@
   "description": "EPUB generator for Fimfiction.net stories",
   "main": "fimfiction-to-epub.js",
   "scripts": {
+    "build": "gulp",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
