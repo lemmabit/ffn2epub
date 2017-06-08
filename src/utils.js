@@ -100,17 +100,54 @@ export function processTemplate(template, replacements) {
     }
   }
   
+  // collect replacements upfront: { start, end, replacement }
+  const replacementPoints = [];
   for(let key in replacements) {
     if(Object.prototype.hasOwnProperty.call(replacements, key)) {
+      const placeholder = `{{ ${key} }}`;
       const replacement = replacements[key];
-      // what a lovely bit of code, eh?
-      template = template.replace(
-        new RegExp(`\\{\\{\\s*${key.replace(/[\.\*\+\?\^\$\{\}\(\)\|\[\]\\]/g, '\\$&')}\\s*\\}\\}`, 'g'),
-        (match, offset, string) => flatten(replacement, '\n' + Array(offset - string.lastIndexOf('\n', offset)).join(' '))
-      );
+      
+      for(
+        let search = 0, start;
+        (start = template.indexOf(placeholder, search)) !== -1;
+        search = start + placeholder.length
+      ) {
+        replacementPoints.push({
+          start,
+          end: start + placeholder.length,
+          replacement,
+        });
+      }
     }
   }
-  return template;
+  // sort them so we can process them in order
+  replacementPoints.sort((a, b) => a.start - b.start);
+  
+  const output = [];
+  let nextChar = 0;
+  for(let i = 0; i < replacementPoints.length; ++i) {
+    const { start, end, replacement } = replacementPoints[i];
+    output.push(template.slice(nextChar, start));
+    // this is a little arcane.
+    // lineLength ends up being the length of the current line, up to the
+    // replacement point.
+    // this allows us to do nice indentation.
+    let lineLength = 0;
+    for(let j = output.length - 1; j >= 0; --j) {
+      const lastNewline = output[j].lastIndexOf('\n');
+      if(lastNewline !== -1) {
+        lineLength += output[j].length - lastNewline - 1;
+        break;
+      } else {
+        lineLength += output[j].length;
+      }
+    }
+    output.push(flatten(replacement, '\n' + Array(lineLength + 1).join(' ')));
+    nextChar = end;
+  }
+  output.push(template.slice(nextChar));
+  
+  return output.join('');
 }
 
 export function makeSlug(str) {
