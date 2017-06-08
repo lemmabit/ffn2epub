@@ -16,6 +16,12 @@ const settingsConfig = [
     property: 'checked',
   },
   {
+    key: 'markAsNonlinear',
+    defaultValue: true,
+    selector: 'input[name="mark_as_nonlinear"]',
+    property: 'checked',
+  },
+  {
     key: 'autoHyphens',
     defaultValue: 'unspecified',
     selector: 'select[name="automatic_hyphens"]',

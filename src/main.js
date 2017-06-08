@@ -6,6 +6,7 @@ window.addEventListener('click', ev => {
   const {
     centerHeadings,
     enableHeartquotes,
+    markAsNonlinear,
     autoHyphens,
     epubVersion,
   } = getSettings();
@@ -28,6 +29,7 @@ window.addEventListener('click', ev => {
     return Book.toEPUB(book, {
       centerHeadings,
       enableHeartquotes,
+      markAsNonlinear,
       autoHyphens,
       epubVersion,
     }).then(blob => ({

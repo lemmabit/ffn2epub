@@ -177,7 +177,7 @@ import resources_chapter_xhtml from './resources/chapter.xhtml';
 import resources_cover_image_xhtml from './resources/cover-image.xhtml';
 import resources_style_css from './resources/style.css';
 
-export function toEPUB(book, { centerHeadings, enableHeartquotes, autoHyphens, epubVersion }) {
+export function toEPUB(book, { centerHeadings, enableHeartquotes, markAsNonlinear, autoHyphens, epubVersion }) {
   function maybeStringquotes(string) {
     if(enableHeartquotes) {
       return stringquotes(string);
@@ -185,6 +185,8 @@ export function toEPUB(book, { centerHeadings, enableHeartquotes, autoHyphens, e
       return string;
     }
   }
+  
+  const nonlinear = markAsNonlinear ? 'no' : 'yes';
   
   const now = new Date();
   now.setUTCMilliseconds(0);
@@ -334,7 +336,12 @@ export function toEPUB(book, { centerHeadings, enableHeartquotes, autoHyphens, e
     IMAGE_ITEMS:        Array.from(images.values()).map(({ id, name, mime }) => {
       return `<item id="${escapeForXML(id)}" href="${escapeForXML(name)}" media-type="${escapeForXML(mime)}"${id === 'cover-image' ? ' properties="cover-image"' : ''} />`;
     }),
-    CHAPTER_ITEMREFS:   (book.coverImageURL ? ['<itemref idref="cover-image-page" linear="no" />'] : []).concat(['<itemref idref="long-desc" linear="no" />', '<itemref idref="nav" linear="no" />'], book.chapters.map(ch => {
+    CHAPTER_ITEMREFS:   (book.coverImageURL ? [
+      `<itemref idref="cover-image-page" linear="${nonlinear}" />`
+    ] : []).concat([
+      `<itemref idref="long-desc" linear="${nonlinear}" />`,
+      `<itemref idref="nav" linear="${nonlinear}" />`
+    ], book.chapters.map(ch => {
       const slug = slugs.get(ch);
       if(slug !== escapeForXML(slug)) {
         throw Error("Slugs should always be XML-safe!");
