@@ -36,6 +36,12 @@ Note that your e-reader might go straight to the first chapter when you open the
 
 [Your device can probably read EPUBs.](http://koreader.rocks/) You can use [Calibre](https://calibre-ebook.com/) to convert EPUB to other formats if you really want to use a system that makes that necessary.
 
+## Building
+
+To build this script, you'll first need to have [Node.js](https://nodejs.org/en/) and [NPM](https://www.npmjs.com/) installed. Then enter the directory you checked the repository out to and run `npm install` to install the dev dependencies. (These packages are only installed in the current directory.) After that, just run `npm run build` to build the script.
+
+If `npm run build` is too much typing for you, install the [Gulp](http://gulpjs.com/) CLI globally and you'll be able to build the project with just `gulp`. You can install the Gulp CLI with `npm install -g gulp-cli`, but it may also be available in your operating system's official repositories. For instance, Arch Linux users can install it with `pacman -S gulp`.
+
 ## Why does your code suck so bad?
 
 I just want to read some stories about ponies, man. I don't have time for this "abstraction" stuff, or "comments", or "unit tests", and definitely not "lines under 280 characters long". That's a load of tortellini or some such funny-named, non-vulgar thing. Just accept the beauteous beauty of the EPUBs themselves, which are beautiful. (That's just my most humble opinion, of course, but it's also true.)
