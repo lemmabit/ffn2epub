@@ -70,7 +70,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 // need to repeat a third time. You can find it at the following address:
 // <https://github.com/Permutatrix/ffn2epub/blob/master/LICENSE>
 
-// And then there's one part that's not MIT-licensed:
+// And then there's one part that's under a different license:
 
 /*
 License for Hypher, whose hyphenation algorithm and en-US hyphenation dictio-
@@ -102,3 +102,4 @@ OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
+
