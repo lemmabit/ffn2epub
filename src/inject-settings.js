@@ -28,6 +28,12 @@ const settingsConfig = [
     property: 'value',
   },
   {
+    key: 'paragraphSpacing',
+    defaultValue: 'double',
+    selector: 'select[name="paragraph_spacing"]',
+    property: 'value',
+  },
+  {
     key: 'epubVersion',
     defaultValue: '3.0',
     selector: 'select[name="epub_version"]',

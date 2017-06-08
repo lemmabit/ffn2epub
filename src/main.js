@@ -8,6 +8,7 @@ window.addEventListener('click', ev => {
     enableHeartquotes,
     markAsNonlinear,
     autoHyphens,
+    paragraphSpacing,
     epubVersion,
   } = getSettings();
   
@@ -31,6 +32,7 @@ window.addEventListener('click', ev => {
       enableHeartquotes,
       markAsNonlinear,
       autoHyphens,
+      paragraphSpacing,
       epubVersion,
     }).then(blob => ({
       filename: `${book.title} - ${book.author}.epub`,

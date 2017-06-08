@@ -177,7 +177,14 @@ import resources_chapter_xhtml from './resources/chapter.xhtml';
 import resources_cover_image_xhtml from './resources/cover-image.xhtml';
 import resources_style_css from './resources/style.css';
 
-export function toEPUB(book, { centerHeadings, enableHeartquotes, markAsNonlinear, autoHyphens, epubVersion }) {
+export function toEPUB(book, {
+  centerHeadings,
+  enableHeartquotes,
+  markAsNonlinear,
+  autoHyphens,
+  paragraphSpacing,
+  epubVersion,
+}) {
   function maybeStringquotes(string) {
     if(enableHeartquotes) {
       return stringquotes(string);
@@ -243,7 +250,40 @@ export function toEPUB(book, { centerHeadings, enableHeartquotes, markAsNonlinea
       }
       `;
     }
-    return (hyphenationCSS + headingsCSS).trim().split(/\n {0,6}/);
+    const spacingParts = new Set(paragraphSpacing.split('+'));
+    let spacingCSS = `
+      p {
+        text-indent: ${spacingParts.has('indent') ? '2.5em' : '0'};
+      }
+      `;
+    if(spacingParts.has('indent') && !spacingParts.has('first')) {
+      spacingCSS += `
+      p.first-paragraph {
+        text-indent: 0;
+      }
+      `;
+    }
+    if(spacingParts.has('double')) {
+      spacingCSS += `
+      /* Mostly a bunch of selectors from Fimfiction itself. */
+      .generated-author-attribution,
+      .bbcode-center, .embed-container,
+      p, blockquote, hr, ul, ol, pre, figure,
+      h1, h2, h3, h4, h5, h6,
+      .imgur-embed-iframe-pub, .oembed,
+      .story-embed, .bbcode__block,
+      .bbcode-right, .excerpt, .plaque {
+        margin-top: 1.15em;
+      }
+      `;
+    } else {
+      spacingCSS += `
+      .generated-author-attribution {
+        margin: 1.15em 0;
+      }
+      `;
+    }
+    return (hyphenationCSS + headingsCSS + spacingCSS).trim().split(/\n {0,6}/);
   })();
   
   const slugs = new Map();
@@ -427,6 +467,13 @@ function renderAsXHTML({ el, images, doHyphenate }) {
       tagName = 'p';
       classNames = 'center ' + classNames;
     }
+    
+    if(tagName === 'p' && !el.matches('p + p')) {
+      // we have to mark this manually because ereaders tend to have
+      // rather poor CSS implementations.
+      classNames += ' first-paragraph';
+    }
+    
     classNames = classNames.trim();
     
     if(tagName === 'iframe') {
