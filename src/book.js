@@ -236,7 +236,7 @@ export function toEPUB(book, { centerHeadings, enableHeartquotes, autoHyphens, e
     let headingsCSS = '';
     if(centerHeadings) {
       headingsCSS = `
-      h1 {
+      h1, .generated-author-attribution {
         text-align: center;
       }
       `;
