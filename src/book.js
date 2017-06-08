@@ -116,6 +116,14 @@ export function fromFFHTML({ story: doc, storyContainer, enableHeartquotes }) {
     authorElement.textContent = `by ${author}`;
     elements.unshift(titleElement, authorElement);
     
+    const fimficLinkContainer = document.createElement('p');
+    fimficLinkContainer.classList.add('generated-fimfiction-link');
+    const fimficLinkElement = document.createElement('a');
+    fimficLinkElement.href = url;
+    fimficLinkElement.textContent = "Published on Fimfiction.net.";
+    fimficLinkContainer.appendChild(fimficLinkElement);
+    elements.push(fimficLinkContainer);
+    
     if(enableHeartquotes) {
       elements.forEach(heartquotes); // just like with chapters.
     }

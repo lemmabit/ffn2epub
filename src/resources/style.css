@@ -34,6 +34,10 @@ img {
   text-align: center;
 }
 
+.generated-fimfiction-link {
+  font-style: italic;
+}
+
 .authors-note {
   /* Intended to mimic the native appearance of A/N's on Fimfiction. */
   margin: 1.15em 0;
