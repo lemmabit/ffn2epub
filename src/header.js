@@ -10,7 +10,7 @@
 // @updateURL   https://openuserjs.org/meta/Permutatrix/Fimfiction_to_EPUB.meta.js
 // @downloadURL https://openuserjs.org/src/scripts/Permutatrix/Fimfiction_to_EPUB.user.js
 // @include     /^https?://(www.)?fimfiction.net//
-// @version     2.1.0
+// @version     2.2.0
 // @run-at      document-start
 // @grant       GM_xmlhttpRequest
 // ==/UserScript==
