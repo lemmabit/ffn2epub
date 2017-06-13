@@ -47,7 +47,7 @@ export function showCustomError(html, options) {
   menu.SetFixed(true);
   menu.SetContent(`<center style="padding: 18px;">${html}</center>`);
   menu.SetFooter('<center><button id="alert_button" class="styled_button" style="padding: 5px 40px;">Ok</button></center>');
-  menu.SetWidth(String(width || '350px'));
+  menu.element.querySelector('.drop-down-pop-up').style.width = width || '350px';
   menu.Show();
   document.getElementById('alert_button').addEventListener('click', ev => {
     ev.preventDefault();
