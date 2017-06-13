@@ -22,6 +22,12 @@ const settingsConfig = [
     property: 'checked',
   },
   {
+    key: 'includeAuthorsNotes',
+    defaultValue: true,
+    selector: 'input[name="include_authors_notes"]',
+    property: 'checked',
+  },
+  {
     key: 'autoHyphens',
     defaultValue: 'unspecified',
     selector: 'select[name="automatic_hyphens"]',

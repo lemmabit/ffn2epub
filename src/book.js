@@ -3,7 +3,7 @@ import { heartquotes, stringquotes } from './heartquotes.js';
 import * as OCFWriter from './ocf-writer.js';
 
 // note that this function modifies the passed-in documents in place.
-export function fromFFHTML({ story: doc, storyContainer, enableHeartquotes }) {
+export function fromFFHTML({ story: doc, storyInfoBox, enableHeartquotes, includeAuthorsNotes }) {
   function isEmptyParagraph(el) {
     return el.outerHTML.toLowerCase() === '<p></p>';
   }
@@ -28,11 +28,8 @@ export function fromFFHTML({ story: doc, storyContainer, enableHeartquotes }) {
     const anchor = anchors[i];
     const nextAnchor = anchors[i + 1] || null;
     
-    const chapterTitleH3 = anchor.nextElementSibling;
-    if(chapterTitleH3.tagName.toLowerCase() !== 'h3') {
-      throw Error(`The first element after <a name="${anchor.name}"> was <${chapterTitleH3.tagName}>; expected <h3>`);
-    }
-    const chapterTitle = chapterTitleH3.textContent.trim();
+    const chapterTitleH1 = anchor.closest('h1');
+    const chapterTitle = chapterTitleH1.textContent.trim();
     
     const elements = [];
     
@@ -41,21 +38,29 @@ export function fromFFHTML({ story: doc, storyContainer, enableHeartquotes }) {
     titleElement.textContent = chapterTitle;
     elements.push(titleElement);
     
-    for(let el = chapterTitleH3.nextElementSibling; el !== nextAnchor; el = el.nextElementSibling) {
-      if(!el.matches('base') && (elements.length > 1 || !isEmptyParagraph(el))) { // skip <base> and leading <p></p>.
+    for(let el = chapterTitleH1.closest('header').nextElementSibling; el && !el.matches('footer'); el = el.nextElementSibling) {
+      if(
+        !el.matches('base') && // skip <base>
+        (includeAuthorsNotes || !el.matches('aside.authors-note')) && // skip author's notes if asked to
+        (elements.length > 1 || !isEmptyParagraph(el)) // skip leading <p></p>
+      ) {
         elements.push(el);
       }
     }
     
-    if(elements[elements.length - 1].tagName.toLowerCase() === 'hr') {
-      elements.pop();
-    }
     while(isEmptyParagraph(elements[elements.length - 1])) {
       elements.pop(); // cut off any trailing <p></p>.
     }
     
     if(enableHeartquotes) {
-      elements.forEach(heartquotes); // smartify quotes and ellipses.
+      // smartify quotes and ellipses.
+      elements.forEach(el => {
+        if(el.matches('aside.authors-note')) {
+          [...el.children].forEach(heartquotes);
+        } else {
+          heartquotes(el);
+        }
+      });
     }
     
     chapters.push({
@@ -67,6 +72,9 @@ export function fromFFHTML({ story: doc, storyContainer, enableHeartquotes }) {
   const existingTitleElements = chapters.map(({ title, elements }) => {
     for(let i = 1; i < elements.length; ++i) {
       const el = elements[i];
+      if(el.matches('aside.authors-note')) {
+        return;
+      }
       const textContent = el.textContent;
       if(/[^\W_]/.test(textContent)) {
         if(areStringsEquivalent(textContent, title)) {
@@ -89,21 +97,19 @@ export function fromFFHTML({ story: doc, storyContainer, enableHeartquotes }) {
   // this will lead to redundancy in some cases, but that's better than
   // inconsistency.
   
-  const coverImageImg = storyContainer.querySelector('.story_container__story_image img');
+  const coverImageImg = storyInfoBox.querySelector('.story_container__story_image img, img.story_image');
   const coverImageURL = coverImageImg && coverImageImg.getAttribute('data-fullsize');
   
-  const longDescriptionDiv = storyContainer.querySelector('.description-text');
-  let description = "";
+  const descriptionSummary = doc.querySelector('header > details > summary');
+  const description = descriptionSummary.textContent.trim();
+  
   const longDescription = (function() {
     const elements = [];
-    for(let el = longDescriptionDiv.firstElementChild; el; el = el.nextElementSibling) {
+    for(let el = descriptionSummary.nextElementSibling; el; el = el.nextElementSibling) {
       if(elements.length > 0 || !isEmptyParagraph(el)) { // skip any leading <p></p>.
         elements.push(el);
-        description += el.textContent;
-        description += " ";
       }
     }
-    description = description.trim();
     while(isEmptyParagraph(elements[elements.length - 1])) {
       elements.pop(); // cut off any trailing <p></p>.
     }
@@ -134,22 +140,25 @@ export function fromFFHTML({ story: doc, storyContainer, enableHeartquotes }) {
     };
   })();
   
-  const datePublishedSpan = document.querySelector('.approved-date span[data-time]');
-  const datePublished = new Date((datePublishedSpan.getAttribute('data-time') |0) * 1000);
+  const datePublishedTime = doc.querySelector('header > h1 + h2 + p > time');
+  const datePublished = new Date(datePublishedTime.getAttribute('datetime'));
   
-  const contentRatingA = storyContainer.querySelector('[class*="content-rating-"]');
+  const contentRatingA = storyInfoBox.querySelector('[class*="content-rating-"], [class*="content_rating_"]');
   const { contentRating } = [
     { className: 'content-rating-everyone', contentRating: 'Everyone' },
     { className: 'content-rating-teen',     contentRating: 'Teen' },
     { className: 'content-rating-mature',   contentRating: 'Mature' },
-  ].find(({ className }) => contentRatingA.classList.contains(className));
+  ].find(({ className }) => {
+    return contentRatingA.classList.contains(className) ||
+           contentRatingA.classList.contains(className.replace(/\-/g, '_'));
+  });
   
-  const categories = [...storyContainer.querySelectorAll('.tag-genre')].map(a => a.textContent.trim());
+  const categories = [...storyInfoBox.querySelectorAll('.tag-genre')].map(a => a.title.trim() || a.textContent.trim());
   
-  const characterTags = [...storyContainer.querySelectorAll('.tag-character')].map(a => {
+  const characterTags = [...storyInfoBox.querySelectorAll('.tag-character')].map(a => {
     return {
-      human: a.title,
-      machine: /\/([^\/]+)$/.exec(a.getAttribute('href'))[1],
+      human: a.title.trim(),
+      machine: a.getAttribute('data-tag'),
     };
   });
   
@@ -466,6 +475,10 @@ function renderAsXHTML({ el, images, doHyphenate }) {
     if(tagName === 'center') {
       tagName = 'p';
       classNames = 'center ' + classNames;
+    } else if(el.matches('header, footer, aside')) {
+      tagName = 'div';
+    } else if(el.matches('.authors-note > header:first-child h1')) {
+      tagName = 'b';
     }
     
     if(tagName === 'p' && !el.matches('p + p')) {

@@ -7,25 +7,30 @@ window.addEventListener('click', ev => {
     centerHeadings,
     enableHeartquotes,
     markAsNonlinear,
+    includeAuthorsNotes,
     autoHyphens,
     paragraphSpacing,
     epubVersion,
   } = getSettings();
   
-  const a = ev.target.closest('a[title="Download Story (.epub)"]');
+  const a = ev.target.closest('a[href$="/epub"][href*="/story/download/"]');
   if(!a) return;
-  const match = /download\/(\d+)\/epub/.exec(a.href);
+  const match = /\/(\d+)\/epub$/.exec(a.getAttribute('href'));
   if(!match) return;
   const storyID = decodeURIComponent(match[1]);
   const storyContainer = a.closest('.story_container');
+  const storyCardContainer = a.closest('.story-card-container');
+  if(!storyContainer && !storyCardContainer) return;
+  const storyCard = storyCardContainer && storyCardContainer.querySelector('.story-card');
   
   Promise.resolve()
-  .then(() => get(storyContainer.querySelector('a[title="Download Story (.html)"]').href, 'document'))
+  .then(() => get(`https://www.fimfiction.net/story/download/${storyID}/html`, 'document'))
   .then(story => {
     const book = Book.fromFFHTML({
       story,
-      storyContainer,
+      storyInfoBox: storyContainer || storyCard,
       enableHeartquotes,
+      includeAuthorsNotes,
     });
     return Book.toEPUB(book, {
       centerHeadings,
