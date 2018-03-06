@@ -4,7 +4,7 @@
 // @description An alternative EPUB generator for Fimfiction.net stories
 // @author      Permutator
 // @copyright   2017, Permutator
-// @license     MIT, https://github.com/Permutatrix/ffn2epub/blob/master/LICENSE
+// @license     MIT
 // @homepageURL https://github.com/Permutatrix/ffn2epub#readme
 // @supportURL  https://github.com/Permutatrix/ffn2epub/issues
 // @updateURL   https://openuserjs.org/meta/Permutatrix/Fimfiction_to_EPUB.meta.js
