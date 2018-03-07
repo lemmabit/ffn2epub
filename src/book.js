@@ -153,11 +153,11 @@ export function fromFFHTML({ story: doc, storyInfoBox, enableHeartquotes, includ
            contentRatingA.classList.contains(className.replace(/\-/g, '_'));
   });
   
-  const categories = [...storyInfoBox.querySelectorAll('.tag-genre')].map(a => a.title.trim() || a.textContent.trim());
+  const categories = [...storyInfoBox.querySelectorAll('.tag-genre')].map(a => a.title.replace(/\(.*/, '').trim() || a.textContent.trim());
   
   const characterTags = [...storyInfoBox.querySelectorAll('.tag-character')].map(a => {
     return {
-      human: a.title.trim(),
+      human: a.title.replace(/\(.*/, '').trim(),
       machine: a.getAttribute('data-tag'),
     };
   });
